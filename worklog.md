@@ -426,3 +426,31 @@ Stage Summary:
 - На Vercel: каталог, SSR, PWA, SEO работают. Auth/favorites БД-операции требуют реальной БД (Postgres).
 - GitHub: запушен коммит e88b77c3.
 - Сайт: https://kinovspyshka-cinema.vercel.app
+
+---
+Task ID: 14
+Agent: main
+Task: Этап 6 — тёмная/светлая тема + история просмотров.
+
+Work Log:
+- next-themes: ThemeProvider (attribute=class, defaultTheme=dark, enableSystem=false).
+- Светлая тема в :root globals.css: бежевый фон (oklch 0.98 0.005 60), красный акцент сохранён.
+- ThemeToggle: кнопка с Sun/Moon иконками, mounted-флаг для избежания гидрации-mismatch.
+- Переключатель добавлен в шапку рядом с поиском.
+- История просмотров (localStorage, до 20 записей): useWatchHistory хук.
+  - addToHistory при открытии фильма (в openMovie callback).
+  - Секция «Вы смотрели» на главной (только если есть история).
+- Lint чистый (eslint-disable для стандартного next-themes паттерна mounted).
+
+Self-verification (Agent Browser):
+- Тема: html class "dark" → клик → "light" → bg lab(97.6% светлый) → клик → "dark".
+- VLM: «светлая тема, переключатель в шапке виден, каталог читаемый».
+- История: клик по карточке → модалка → Escape → секция «Вы смотрели» появилась.
+
+Production (https://kinovspyshka-cinema.vercel.app):
+- Деплой READY (sha 0a1d76e2). 200 OK, время 1.07с.
+
+Stage Summary:
+- Тёмная/светлая тема с переключателем (defaultTheme=dark, персистит в localStorage).
+- История просмотров с секцией «Вы смотрели».
+- GitHub: запушен коммит 0a1d76e2.
