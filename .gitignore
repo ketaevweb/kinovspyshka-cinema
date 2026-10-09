@@ -52,3 +52,18 @@ prompt
 server.log
 # Skills directory
 /skills/
+# Dev logs
+dev.log
+server.log
+
+# Local databases
+db/
+*.db
+*.db-journal
+
+# Build output
+.next/
+standalone/
+
+# Cache
+*.tsbuildinfo
