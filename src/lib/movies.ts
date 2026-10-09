@@ -13346,4 +13346,120 @@ export function getYearRange(): { min: number; max: number } {
   return { min: Math.min(...years), max: Math.max(...years) };
 }
 
+// ----- Курированные коллекции -----
+
+export interface Collection {
+  id: string;
+  title: string;
+  subtitle: string;
+  movies: Movie[];
+}
+
+/** Топ-250 Кинопоиска — лучшие фильмы по рейтингу kp */
+export function getTop250(): Movie[] {
+  return [...movies()]
+    .sort((a, b) => b.rating - a.rating)
+    .slice(0, 14);
+}
+
+/** Фильмы конкретного режиссёра */
+export function getMoviesByDirector(director: string, limit = 14): Movie[] {
+  return movies()
+    .filter((m) => m.director.includes(director))
+    .sort((a, b) => b.rating - a.rating)
+    .slice(0, limit);
+}
+
+/** Фильмы конкретной страны */
+export function getMoviesByCountry(country: string, limit = 14): Movie[] {
+  return movies()
+    .filter((m) => m.countries.includes(country))
+    .sort((a, b) => b.rating - a.rating)
+    .slice(0, limit);
+}
+
+/** Все курированные коллекции для главной страницы */
+export function getCollections(): Collection[] {
+  return [
+    {
+      id: "top250",
+      title: "Топ-250 Кинопоиска",
+      subtitle: "Лучшие фильмы всех времён по версии зрителей",
+      movies: getTop250(),
+    },
+    {
+      id: "nolan",
+      title: "Кристофер Нолан",
+      subtitle: "Мастер интеллектуального блокбастера",
+      movies: getMoviesByDirector("Кристофер Нолан"),
+    },
+    {
+      id: "tarantino",
+      title: "Квентин Тарантино",
+      subtitle: "Культовые диалоги и нелинейное повествование",
+      movies: getMoviesByDirector("Квентин Тарантино"),
+    },
+    {
+      id: "spielberg",
+      title: "Стивен Спилберг",
+      subtitle: "Режиссёр величайших хитов кино",
+      movies: getMoviesByDirector("Стивен Спилберг"),
+    },
+    {
+      id: "scorsese",
+      title: "Мартин Скорсезе",
+      subtitle: "Хроник криминального мира Америки",
+      movies: getMoviesByDirector("Мартин Скорсезе"),
+    },
+    {
+      id: "ritchie",
+      title: "Гай Ричи",
+      subtitle: "Британский криминальный стиль",
+      movies: getMoviesByDirector("Гай Ричи"),
+    },
+    {
+      id: "fincher",
+      title: "Дэвид Финчер",
+      subtitle: "Мастер психологического триллера",
+      movies: getMoviesByDirector("Дэвид Финчер"),
+    },
+    {
+      id: "russian",
+      title: "Русское кино",
+      subtitle: "Лучшее отечественное кино и СССР",
+      movies: movies()
+        .filter((m) => m.countries.includes("Россия") || m.countries.includes("СССР"))
+        .sort((a, b) => b.rating - a.rating)
+        .slice(0, 14),
+    },
+    {
+      id: "anime",
+      title: "Аниме и мультфильмы",
+      subtitle: "Японская анимация и шедевры Disney/Pixar",
+      movies: movies()
+        .filter((m) => m.genres.includes("Мультфильм") || m.genres.includes("Аниме"))
+        .sort((a, b) => b.rating - a.rating)
+        .slice(0, 14),
+    },
+    {
+      id: "scifi",
+      title: "Фантастика будущего",
+      subtitle: "Космос, киберпанк и далёкие миры",
+      movies: movies()
+        .filter((m) => m.genres.includes("Фантастика"))
+        .sort((a, b) => b.rating - a.rating)
+        .slice(0, 14),
+    },
+    {
+      id: "thriller",
+      title: "Захватывающие триллеры",
+      subtitle: "Напряжённые истории, от которых не оторваться",
+      movies: movies()
+        .filter((m) => m.genres.includes("Триллер"))
+        .sort((a, b) => b.rating - a.rating)
+        .slice(0, 14),
+    },
+  ];
+}
+
 export const TOTAL_MOVIES = MOVIES.length;

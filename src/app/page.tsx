@@ -22,6 +22,7 @@ export default function Home() {
   const [allMovies, setAllMovies] = useState<Movie[]>([]);
   const [genres, setGenres] = useState<Genre[]>([]);
   const [countries, setCountries] = useState<Genre[]>([]);
+  const [collections, setCollections] = useState<{ id: string; title: string; subtitle: string; movies: Movie[] }[]>([]);
   const [yearRange, setYearRange] = useState({ min: 1960, max: 2026 });
   const [loadingData, setLoadingData] = useState(true);
 
@@ -53,12 +54,13 @@ export default function Home() {
     let active = true;
     (async () => {
       try {
-        const [f, t, a, g, c] = await Promise.all([
+        const [f, t, a, g, c, col] = await Promise.all([
           fetch("/api/movies/featured").then((r) => r.json()),
           fetch("/api/movies/trending").then((r) => r.json()),
           fetch("/api/movies").then((r) => r.json()),
           fetch("/api/movies/genres").then((r) => r.json()),
           fetch("/api/movies/countries").then((r) => r.json()),
+          fetch("/api/movies/collections").then((r) => r.json()),
         ]);
         if (!active) return;
         setFeatured(f.movies ?? []);
@@ -68,6 +70,7 @@ export default function Home() {
         setNewReleases(sortedNew);
         setGenres(g.genres ?? []);
         setCountries(c.countries ?? []);
+        setCollections(col.collections ?? []);
         if (c.yearRange) {
           setYearRange(c.yearRange);
           setFilters((prev) => ({
@@ -245,6 +248,23 @@ export default function Home() {
             onPlay={openMovie}
             onInfo={openMovie}
           />
+        )}
+
+        {/* Курированные коллекции */}
+        {loadingData ? (
+          <RowSkeleton />
+        ) : (
+          collections.map((col) => (
+            <MovieRow
+              key={col.id}
+              id={`collection-${col.id}`}
+              title={col.title}
+              subtitle={col.subtitle}
+              movies={col.movies}
+              onPlay={openMovie}
+              onInfo={openMovie}
+            />
+          ))
         )}
 
         {/* Каталог с расширенными фильтрами */}

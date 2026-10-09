@@ -115,10 +115,40 @@ export function MovieModal({
                     <Detail
                       icon={Users}
                       label="В ролях"
-                      value={movie.cast.join(", ")}
+                      value={movie.cast.slice(0, 3).join(", ")}
                       full
                     />
                   </dl>
+
+                  {/* Визуальные чипы актёров */}
+                  {movie.cast.length > 0 && (
+                    <div className="mt-4">
+                      <p className="mb-2 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                        <Users className="h-3.5 w-3.5" />
+                        Актёрский состав
+                      </p>
+                      <div className="no-scrollbar flex gap-3 overflow-x-auto pb-2">
+                        {movie.cast.map((actor) => (
+                          <div
+                            key={actor}
+                            className="flex w-20 shrink-0 flex-col items-center gap-1.5"
+                          >
+                            <div className="flex h-16 w-16 items-center justify-center rounded-full border border-white/10 bg-gradient-to-br from-cinema/30 to-zinc-800 text-lg font-black text-white/80">
+                              {actor
+                                .split(" ")
+                                .slice(0, 2)
+                                .map((w) => w[0])
+                                .join("")
+                                .toUpperCase()}
+                            </div>
+                            <p className="line-clamp-2 text-center text-[11px] leading-tight text-foreground/80">
+                              {actor}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Боковые действия */}
