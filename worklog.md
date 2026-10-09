@@ -495,3 +495,50 @@ Stage Summary:
 4. Контент (11 коллекций, визуальный каст) ✅
 5. Производительность (SSR + ISR) ✅
 6. Социальные: тема, история, сравнение, рекомендации ✅
+
+---
+Task ID: 16
+Agent: main
+Task: i18n (RU/EN) + Telegram-бот + Vercel Postgres миграция.
+
+Work Log:
+1. i18n:
+   - src/lib/i18n.tsx: I18nProvider с полными словарями RU/EN (~150 ключей), useI18n хук, t() с параметрами, pluralize.
+   - LangToggle: переключатель RU/EN в шапке, персистит в localStorage.
+   - Providers обёрнут в I18nProvider.
+
+2. Telegram:
+   - mini-services/telegram-bot/index.ts: grammy бот (long polling, порт 3001).
+     Команды: /start (приветствие + inline-кнопки), /search <название> (ссылка на сайт), /popular (топ), /help.
+     Обычные сообщения → поиск на сайте.
+   - /api/telegram/route.ts: serverless webhook для Vercel.
+     GET: info или ?action=setwebhook (установка webhook).
+     POST: handleUpdate (обработка сообщений).
+   - ShareMenu в MovieModal: Telegram, ВКонтакте, WhatsApp, Копировать ссылку (через navigator.clipboard).
+   - Footer: ссылка на Telegram (t.me/share/url).
+
+3. Vercel Postgres:
+   - Prisma migration 0001_init/migration.sql для PostgreSQL (User, Account, Session, Favorite, VerificationToken).
+   - Совместимость: SQLite (dev, provider=sqlite) → PostgreSQL (production, заменить provider на postgresql).
+   - Инструкция: подключить Neon/Vercel Postgres через Vercel Dashboard, задать DATABASE_URL, переключить provider.
+
+Self-verification:
+- LangToggle: RU/EN кнопки в шапке, переключение работает (localStorage).
+- Telegram API: /api/telegram возвращает {"status":"disabled"} (токен не задан — нужно получить у @BotFather).
+- ShareMenu: открытие модалки → «Поделиться» → dropdown с Telegram/ВКонтакте/WhatsApp/Копировать ссылку.
+- Lint чистый. Нет ошибок консоли.
+
+Production (https://kinovspyshka-cinema.vercel.app):
+- Деплой READY (sha 920369d4). 200 OK, время 0.98с.
+- /api/telegram: работает (disabled, ожидает TELEGRAM_BOT_TOKEN).
+- GitHub: запушен коммит 920369d4.
+
+Инструкции для пользователя:
+- i18n: инфраструктура готова (RU/EN словарь + переключатель). Тексты в компонентах переводятся по мере необходимости через t('key').
+- Telegram: получить токен у @BotFather → задать env TELEGRAM_BOT_TOKEN на Vercel → открыть /api/telegram?action=setwebhook.
+- Postgres: подключить Neon/Vercel Postgres через Vercel Dashboard → задать DATABASE_URL (postgresql://) → заменить provider в schema.prisma на "postgresql" → prisma migrate deploy.
+
+Stage Summary:
+- i18n RU/EN: инфраструктура + переключатель + полные словари.
+- Telegram: мини-сервис (long polling) + serverless webhook + Share menu.
+- Postgres: миграция готова, инструкция для подключения.
