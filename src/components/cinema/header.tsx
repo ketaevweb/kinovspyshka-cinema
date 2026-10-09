@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useSession, signOut } from "next-auth/react";
-import { Play, Search, Menu, LogIn, LogOut, Heart } from "lucide-react";
+import { Play, Search, Menu, LogIn, LogOut, Heart, GitCompare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -22,9 +22,18 @@ interface HeaderProps {
   onLogoClick: () => void;
   favoritesCount?: number;
   onFavoritesClick?: () => void;
+  onCompareClick?: () => void;
+  compareCount?: number;
 }
 
-export function Header({ onSearchClick, onLogoClick, favoritesCount = 0, onFavoritesClick }: HeaderProps) {
+export function Header({
+  onSearchClick,
+  onLogoClick,
+  favoritesCount = 0,
+  onFavoritesClick,
+  onCompareClick,
+  compareCount = 0,
+}: HeaderProps) {
   const { data: session, status } = useSession();
   const [authOpen, setAuthOpen] = useState(false);
   const authenticated = status === "authenticated";
@@ -82,6 +91,27 @@ export function Header({ onSearchClick, onLogoClick, favoritesCount = 0, onFavor
           </Button>
 
           <ThemeToggle />
+
+          {/* Кнопка сравнения */}
+          {onCompareClick && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onCompareClick}
+              className={cn(
+                "gap-1.5 text-muted-foreground transition hover:text-cinema",
+                compareCount > 0 && "text-cinema"
+              )}
+            >
+              <GitCompare className="h-4 w-4" />
+              <span className="hidden sm:inline">Сравнить</span>
+              {compareCount > 0 && (
+                <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-cinema px-1 text-xs font-bold text-white">
+                  {compareCount}
+                </span>
+              )}
+            </Button>
+          )}
 
           {/* Кнопка избранного */}
           {favoritesCount > 0 && (

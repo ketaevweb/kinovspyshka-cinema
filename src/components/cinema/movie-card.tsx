@@ -1,6 +1,6 @@
 "use client";
 
-import { Play, Star, Plus, Info } from "lucide-react";
+import { Play, Star, Plus, Info, GitCompare } from "lucide-react";
 import type { Movie } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { MoviePoster } from "./movie-poster";
@@ -9,10 +9,12 @@ interface MovieCardProps {
   movie: Movie;
   onPlay: (movie: Movie) => void;
   onInfo?: (movie: Movie) => void;
+  onCompare?: (movie: Movie) => void;
+  inCompare?: boolean;
   variant?: "grid" | "row";
 }
 
-export function MovieCard({ movie, onPlay, onInfo, variant = "grid" }: MovieCardProps) {
+export function MovieCard({ movie, onPlay, onInfo, onCompare, inCompare, variant = "grid" }: MovieCardProps) {
   return (
     <div
       className={cn(
@@ -68,6 +70,23 @@ export function MovieCard({ movie, onPlay, onInfo, variant = "grid" }: MovieCard
             >
               <Plus className="h-4 w-4" />
             </button>
+            {onCompare && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCompare(movie);
+                }}
+                className={cn(
+                  "flex h-9 w-9 items-center justify-center rounded-full border text-white transition hover:scale-110",
+                  inCompare
+                    ? "border-cinema bg-cinema"
+                    : "border-white/40 bg-black/50 hover:border-white"
+                )}
+                aria-label="В сравнение"
+              >
+                <GitCompare className="h-4 w-4" />
+              </button>
+            )}
           </div>
         </div>
       </div>

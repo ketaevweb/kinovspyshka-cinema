@@ -8,6 +8,7 @@ import { MovieRow } from "@/components/cinema/movie-row";
 import { MovieGrid } from "@/components/cinema/movie-grid";
 import { FilterPanel, type FilterState } from "@/components/cinema/filter-panel";
 import { MovieModal } from "@/components/cinema/movie-modal";
+import { CompareDialog } from "@/components/cinema/compare-dialog";
 import { Footer } from "@/components/cinema/footer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
@@ -61,11 +62,43 @@ export function HomeClient({ initialData }: HomeClientProps) {
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [similar, setSimilar] = useState<Movie[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
+  const [compareOpen, setCompareOpen] = useState(false);
+  const [compareList, setCompareList] = useState<Movie[]>([]);
 
   // Избранное: localStorage для гостей + сервер для авторизованных
   const { favorites, toggleFavorite, isFavorite } = useFavorites();
   // История просмотров (localStorage)
   const { history, addToHistory } = useWatchHistory();
+
+  // Сравнение фильмов (до 3)
+  const toggleCompare = useCallback((movie: Movie) => {
+    setCompareList((prev) => {
+      const exists = prev.find((m) => m.id === movie.id);
+      if (exists) return prev.filter((m) => m.id !== movie.id);
+      if (prev.length >= 3) return prev;
+      return [...prev, movie];
+    });
+  }, []);
+
+  const compareIds = useMemo(() => new Set(compareList.map((m) => m.id)), [compareList]);
+
+  // Рекомендации на основе избранных фильмов (content-based: совпадение жанров)
+  const recommendations = useMemo(() => {
+    if (favorites.size === 0 || allMovies.length === 0) return [];
+    const favMovies = allMovies.filter((m) => favorites.has(m.id));
+    const favGenres = new Set(favMovies.flatMap((m) => m.genres));
+    const favIds = new Set(favMovies.map((m) => m.id));
+    return allMovies
+      .filter((m) => !favIds.has(m.id))
+      .map((m) => ({
+        m,
+        score: m.genres.filter((g) => favGenres.has(g)).length,
+      }))
+      .filter((x) => x.score > 0)
+      .sort((a, b) => b.score - a.score || b.m.rating - a.m.rating)
+      .slice(0, 14)
+      .map((x) => x.m);
+  }, [favorites, allMovies]);
 
   // NewReleases вычисляем из SSR allMovies (сортировка по году)
   useEffect(() => {
@@ -181,6 +214,8 @@ export function HomeClient({ initialData }: HomeClientProps) {
         onLogoClick={handleLogoClick}
         favoritesCount={favorites.size}
         onFavoritesClick={() => document.getElementById("favorites")?.scrollIntoView({ behavior: "smooth" })}
+        onCompareClick={() => setCompareOpen(true)}
+        compareCount={compareList.length}
       />
 
       <main className="flex-1">
@@ -222,6 +257,18 @@ export function HomeClient({ initialData }: HomeClientProps) {
             title="Ваше избранное"
             subtitle={`${favorites.size} ${favorites.size === 1 ? "фильм" : favorites.size < 5 ? "фильма" : "фильмов"} в подборке`}
             movies={allMovies.filter((m) => favorites.has(m.id))}
+            onPlay={openMovie}
+            onInfo={openMovie}
+          />
+        )}
+
+        {/* Рекомендации на основе избранного (content-based) */}
+        {!loadingData && recommendations.length > 0 && (
+          <MovieRow
+            id="recommendations"
+            title="Рекомендации для вас"
+            subtitle="Похожие на ваши избранные фильмы по жанрам"
+            movies={recommendations}
             onPlay={openMovie}
             onInfo={openMovie}
           />
@@ -292,6 +339,8 @@ export function HomeClient({ initialData }: HomeClientProps) {
                 movies={filteredMovies}
                 onPlay={openMovie}
                 onInfo={openMovie}
+                onCompare={toggleCompare}
+                compareIds={compareIds}
                 limit={catalogVisible}
               />
             )}
@@ -345,6 +394,14 @@ export function HomeClient({ initialData }: HomeClientProps) {
         onPlay={openMovie}
         onAddToFavorites={toggleFavorite}
         favoriteIds={favorites}
+      />
+
+      <CompareDialog
+        open={compareOpen}
+        onOpenChange={setCompareOpen}
+        allMovies={allMovies}
+        preselected={compareList}
+        onPlay={openMovie}
       />
     </div>
   );
