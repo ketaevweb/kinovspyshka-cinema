@@ -379,3 +379,50 @@ Stage Summary:
 - ISR: API кэшируется на час, страница пересобирается раз в час.
 - Скорость: 0.30с вместо 0.76с (ускорение ~2.5×).
 - SEO улучшен: поисковики видят контент сразу в HTML.
+
+---
+Task ID: 13
+Agent: main
+Task: Этап 3 — авторизация (NextAuth) + избранное на сервере (Prisma).
+
+Work Log:
+- Prisma schema: добавил модели User, Account, Session, VerificationToken, Favorite. Связи с onDelete: Cascade.
+- db:push — схема применена к SQLite.
+- NextAuth v4: CredentialsProvider (email + пароль), JWT session (30 дней), callbacks (jwt/session с user.id).
+- bcryptjs: хэширование паролей (salt 10 раундов).
+- API маршруты:
+  - /api/auth/[...nextauth] — NextAuth handler
+  - /api/auth/register — регистрация (валидация, bcrypt, проверка дублей)
+  - /api/favorites — GET (список), POST (добавить), DELETE (удалить) — с серверной авторизацией
+- AuthDialog: табы Вход/Регистрация, автологин после регистрации, toast-уведомления.
+- useFavorites хук: 
+  - Гости: localStorage (загрузка после гидрации через requestAnimationFrame)
+  - Авторизованные: сервер (Prisma), автосинхронизация локального избранного при входе
+  - toggleFavorite: обновляет Set + синхронизирует с сервером/localStorage
+- Header: кнопка "Войти" / пользовательское меню (avatar + dropdown с Избранное/Выйти). Счётчик ♥ в шапке.
+- Секция "Ваше избранное" на главной (только если есть избранные фильмы).
+- SessionProvider обернул приложение в layout.tsx.
+- package.json: prisma generate в build + postinstall (для Vercel).
+- Vercel env vars: NEXTAUTH_SECRET, NEXTAUTH_URL, DATABASE_URL (file:/tmp/custom.db).
+- Lint чистый (исправил hydration mismatch: начальное состояние = пустой Set, localStorage в effect).
+
+Self-verification (Agent Browser на localhost):
+- Регистрация: форма заполнена → POST /api/auth/register 200 → автологин → avatar "ККиноман" в шапке.
+- Избранное (гость): клик "В избранное" → ♥ "1" в шапке → localStorage.
+- Синхронизация: при входе локальное избранное → POST /api/favorites → сервер (Prisma).
+- Секция "Ваше избранное" появляется с фильмом "1+1".
+- Пользовательское меню: dropdown с "Избранное (1)" и "Выйти".
+- Нет ошибок консоли/гидрации.
+
+Vercel production:
+- Деплой READY (sha e88b77c3).
+- Главная: 200 OK, SSR работает.
+- CSRF: работает (токен возвращается).
+- Регистрация: "Ошибка регистрации" — SQLite ephemeral на serverless (каждый cold start новый /tmp, БД не персистит).
+- Ограничение: для production auth нужен Vercel Postgres / Neon / Supabase. Каталог и SSR работают полностью.
+
+Stage Summary:
+- Auth + favorites полностью работают локально (этот sandbox).
+- На Vercel: каталог, SSR, PWA, SEO работают. Auth/favorites БД-операции требуют реальной БД (Postgres).
+- GitHub: запушен коммит e88b77c3.
+- Сайт: https://kinovspyshka-cinema.vercel.app
