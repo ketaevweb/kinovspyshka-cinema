@@ -557,3 +557,43 @@ Work Log:
 
 Stage Summary:
 - All 5 components now use the useI18n() hook and t() function for hardcoded Russian text. The local pluralMovies() helper in home-client.tsx was removed in favour of the shared pluralize() helper imported from @/lib/i18n. Module-level constants (MODES in search-section, SORT_OPTIONS in filter-panel) were refactored to hold i18n key references instead of localized strings, since hooks can only be called inside components. Lint passes cleanly (eslint . → 0 errors). The only TypeScript error in search-section.tsx (HTMLDivElement ref on <form>) is pre-existing (verified by stashing changes) and unrelated to the i18n work.
+
+---
+Task ID: 17
+Agent: main + general-purpose (i18n)
+Task: Виртуализация каталога + i18n перевод всех компонентов.
+
+Work Log:
+- VirtualMovieGrid (src/components/cinema/virtual-movie-grid.tsx):
+  - useWindowVirtualizer из @tanstack/react-virtual
+  - Группировка фильмов в ряды по columns (2-6 по breakpoint)
+  - measureElement для точной высоты рядов
+  - overscan: 4 ряда для плавности
+  - scrollMargin через state (без ref-access during render)
+  - Результат: 48 фильмов загружено → только 30 в DOM (вместо 48 без виртуализации)
+- Интеграция VirtualMovieGrid в home-client.tsx (замена MovieGrid в каталоге)
+- i18n перевод 6 компонентов на t():
+  - Header: навигация (Главная/Каталог/Тренде/Новинки), кнопки (Войти, Сравнить, Поиск, Избранное, Выйти)
+  - Footer: навигация, теглайн, копирайт, "Сделано с... для любителей кино"
+  - SearchSection: заголовок, подзаголовок, режимы поиска (ID/название/торренты), плейсхолдеры, кнопка "Искать", подсказки
+  - MovieCard: aria-labels (Смотреть, Подробнее, В избранное, В сравнение)
+  - FilterPanel: "Фильтры", "Расширенные фильтры", "Сортировка", "Жанр", "Страна", "Год", "Рейтинг", "Сбросить", "Найдено", 6 вариантов сортировки
+  - HomeClient: заголовки секций (В тренде, Новинки, Каталог, Избранное, Рекомендации, Вы смотрели), пагинация (Показано N из M)
+- Module-level константы (MODES, SORT_OPTIONS) рефакторены: хранят i18n ключи вместо локализованных строк, t() вызывается при рендере
+- Lint чистый.
+
+Self-verification (Agent Browser):
+- i18n: RU → "Новинки", EN → "New", EN → "Find a movie in a second", EN → "Catalog" ✓
+- Виртуализация: 48 фильмов загружено → 30 в DOM (виртуализация работает) ✓
+- Нет ошибок консоли ✓
+- Бесконечная прокрутка работает с виртуализацией ✓
+
+Production (https://kinovspyshka-cinema.vercel.app):
+- Деплой READY (sha 4e533a71). 200 OK, время 0.33с.
+- SSR данные в HTML: "КиноВспышка", "Найдите фильм" (RU по умолчанию), "Начало", "Топ-250" ✓
+
+Stage Summary:
+- Виртуализация: DOM-узлы каталога сокращены с N (до 600) до ~30 (видимые + overscan)
+- i18n: 6 ключевых компонентов переведены на t() с полным RU/EN словарём
+- Переключение языка мгновенно меняет все тексты без перезагрузки
+- GitHub: запушен коммит 4e533a71.
