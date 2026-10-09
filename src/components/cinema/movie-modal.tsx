@@ -28,6 +28,7 @@ import {
   MessageCircle,
   Copy,
 } from "lucide-react";
+import { toast } from "sonner";
 import type { Movie } from "@/lib/types";
 
 interface MovieModalProps {
@@ -280,6 +281,9 @@ function ShareMenu({ movie }: { movie: Movie }) {
         <DropdownMenuItem
           onClick={() => {
             navigator.clipboard?.writeText(filmUrl);
+            toast.success("Ссылка скопирована!", {
+              description: filmUrl,
+            });
           }}
           className="gap-2"
         >

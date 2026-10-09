@@ -54,9 +54,18 @@ export function Footer() {
 
         <div className="mt-6 flex flex-col items-center justify-between gap-2 border-t border-white/5 pt-5 text-xs text-muted-foreground sm:flex-row">
           <p>© {new Date().getFullYear()} {t("footer.copyright")}</p>
-          <p className="flex items-center gap-1.5">
-            {t("footer.madeWith")} <Heart className="h-3.5 w-3.5 fill-cinema text-cinema" /> {t("footer.forCinema")}
-          </p>
+          <div className="flex items-center gap-3">
+            <span className="hidden items-center gap-1 sm:flex">
+              <kbd className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-bold">⌘K</kbd>
+              <kbd className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-bold">T</kbd>
+              <kbd className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-bold">L</kbd>
+              <kbd className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-bold">/</kbd>
+              <span className="ml-1">— горячие клавиши</span>
+            </span>
+            <p className="flex items-center gap-1.5">
+              {t("footer.madeWith")} <Heart className="h-3.5 w-3.5 fill-cinema text-cinema" /> {t("footer.forCinema")}
+            </p>
+          </div>
         </div>
       </div>
     </footer>

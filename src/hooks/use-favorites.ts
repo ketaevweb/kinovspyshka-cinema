@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
+import { toast } from "sonner";
 import type { Movie } from "@/lib/types";
 
 /**
@@ -109,10 +110,10 @@ export function useFavorites() {
 
   const toggleFavorite = useCallback(
     (movie: Movie) => {
+      const wasFav = favorites.has(movie.id);
       setFavorites((prev) => {
         const next = new Set(prev);
-        const isFav = next.has(movie.id);
-        if (isFav) {
+        if (wasFav) {
           next.delete(movie.id);
         } else {
           next.add(movie.id);
@@ -120,7 +121,7 @@ export function useFavorites() {
 
         // Синхронизация с сервером для авторизованных
         if (authenticated) {
-          if (isFav) {
+          if (wasFav) {
             fetch(`/api/favorites?movieId=${encodeURIComponent(movie.id)}`, {
               method: "DELETE",
             }).catch(() => {});
@@ -141,8 +142,23 @@ export function useFavorites() {
         }
         return next;
       });
+
+      // Toast уведомление
+      if (wasFav) {
+        toast.success(`«${movie.title}» удалён из избранного`, {
+          description: "Фильм больше не в вашей подборке",
+        });
+      } else {
+        toast.success(`«${movie.title}» добавлен в избранное ❤️`, {
+          description: "Открыть подборку на главной странице",
+          action: {
+            label: "Открыть",
+            onClick: () => document.getElementById("favorites")?.scrollIntoView({ behavior: "smooth" }),
+          },
+        });
+      }
     },
-    [authenticated]
+    [authenticated, favorites]
   );
 
   const isFavorite = useCallback(

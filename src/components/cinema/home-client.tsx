@@ -12,11 +12,14 @@ import { MovieModal } from "@/components/cinema/movie-modal";
 import { CompareDialog } from "@/components/cinema/compare-dialog";
 import { CommandPalette } from "@/components/cinema/command-palette";
 import { CmdKHint } from "@/components/cinema/cmdk-hint";
+import { EmptyState } from "@/components/cinema/empty-state";
 import { Footer } from "@/components/cinema/footer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 import { useFavorites } from "@/hooks/use-favorites";
 import { useWatchHistory } from "@/hooks/use-watch-history";
+import { useHotkeys } from "@/hooks/use-hotkeys";
+import { useTheme } from "next-themes";
 import { useI18n, pluralize } from "@/lib/i18n";
 import type { Movie, Genre } from "@/lib/types";
 
@@ -165,6 +168,16 @@ export function HomeClient({ initialData }: HomeClientProps) {
   const handleLogoClick = useCallback(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
+
+  // Горячие клавиши: T (тема), L (язык), / (поиск), C (сравнить)
+  const { setTheme, theme } = useTheme();
+  const { setLang } = useI18n();
+  useHotkeys([
+    { key: "t", handler: () => setTheme(theme === "dark" ? "light" : "dark") },
+    { key: "l", handler: () => setLang(lang === "ru" ? "en" : "ru") },
+    { key: "/", handler: () => document.getElementById("search")?.scrollIntoView({ behavior: "smooth" }) },
+    { key: "c", handler: () => setCompareOpen(true) },
+  ]);
 
   // Фильтрация каталога (client-side через useMemo для мгновенного отклика)
   const filteredMovies = useMemo(() => {
@@ -343,6 +356,12 @@ export function HomeClient({ initialData }: HomeClientProps) {
           <div className="mt-6">
             {loadingData ? (
               <GridSkeleton />
+            ) : filteredMovies.length === 0 ? (
+              <EmptyState
+                variant="search"
+                onAction={resetFilters}
+                actionLabel={t("filters.reset")}
+              />
             ) : (
               <VirtualMovieGrid
                 movies={filteredMovies}
