@@ -67,3 +67,4 @@ standalone/
 
 # Cache
 *.tsbuildinfo
+tool-results/
