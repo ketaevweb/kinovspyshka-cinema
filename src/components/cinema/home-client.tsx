@@ -12,6 +12,7 @@ import { Footer } from "@/components/cinema/footer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 import { useFavorites } from "@/hooks/use-favorites";
+import { useWatchHistory } from "@/hooks/use-watch-history";
 import type { Movie, Genre } from "@/lib/types";
 
 type SearchMode = "id" | "name" | "torrent";
@@ -63,6 +64,8 @@ export function HomeClient({ initialData }: HomeClientProps) {
 
   // Избранное: localStorage для гостей + сервер для авторизованных
   const { favorites, toggleFavorite, isFavorite } = useFavorites();
+  // История просмотров (localStorage)
+  const { history, addToHistory } = useWatchHistory();
 
   // NewReleases вычисляем из SSR allMovies (сортировка по году)
   useEffect(() => {
@@ -72,11 +75,12 @@ export function HomeClient({ initialData }: HomeClientProps) {
     }
   }, [allMovies]);
 
-  // Открытие модального окна с подробностями + похожие
+  // Открытие модального окна с подробностями + похожие + запись в историю
   const openMovie = useCallback(async (movie: Movie) => {
     setSelectedMovie(movie);
     setSimilar([]);
     setModalOpen(true);
+    addToHistory(movie); // записываем в историю просмотров
     try {
       const res = await fetch(`/api/movies/${movie.id}`);
       if (res.ok) {
@@ -86,7 +90,7 @@ export function HomeClient({ initialData }: HomeClientProps) {
     } catch {
       /* ignore */
     }
-  }, []);
+  }, [addToHistory]);
 
   // Поиск
   const handleSearch = useCallback(async (mode: SearchMode, query: string) => {
@@ -198,6 +202,18 @@ export function HomeClient({ initialData }: HomeClientProps) {
           loading={searchLoading}
           onPlay={openMovie}
         />
+
+        {/* История просмотров (только если есть) */}
+        {!loadingData && history.length > 0 && (
+          <MovieRow
+            id="history"
+            title="Вы смотрели"
+            subtitle={`Недавно открытые фильмы — ${history.length}`}
+            movies={history.map((h) => allMovies.find((m) => m.id === h.id)).filter(Boolean) as Movie[]}
+            onPlay={openMovie}
+            onInfo={openMovie}
+          />
+        )}
 
         {/* Избранное (только если есть избранные фильмы) */}
         {!loadingData && favorites.size > 0 && (

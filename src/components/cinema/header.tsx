@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useSession, signOut } from "next-auth/react";
-import { Play, Search, Menu, LogIn, LogOut, User, Heart } from "lucide-react";
+import { Play, Search, Menu, LogIn, LogOut, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { AuthDialog } from "./auth-dialog";
+import { ThemeToggle } from "./theme-toggle";
 import { cn } from "@/lib/utils";
 
 interface HeaderProps {
@@ -79,6 +80,8 @@ export function Header({ onSearchClick, onLogoClick, favoritesCount = 0, onFavor
             <Search className="h-4 w-4" />
             <span className="hidden sm:inline">Поиск</span>
           </Button>
+
+          <ThemeToggle />
 
           {/* Кнопка избранного */}
           {favoritesCount > 0 && (
