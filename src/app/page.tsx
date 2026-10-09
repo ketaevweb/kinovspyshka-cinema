@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { Header } from "@/components/cinema/header";
 import { HeroCarousel } from "@/components/cinema/hero-carousel";
 import { SearchSection } from "@/components/cinema/search-section";
 import { MovieRow } from "@/components/cinema/movie-row";
 import { MovieGrid } from "@/components/cinema/movie-grid";
-import { GenreFilter } from "@/components/cinema/genre-filter";
+import { FilterPanel, type FilterState } from "@/components/cinema/filter-panel";
 import { MovieModal } from "@/components/cinema/movie-modal";
 import { Footer } from "@/components/cinema/footer";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,9 +21,20 @@ export default function Home() {
   const [newReleases, setNewReleases] = useState<Movie[]>([]);
   const [allMovies, setAllMovies] = useState<Movie[]>([]);
   const [genres, setGenres] = useState<Genre[]>([]);
+  const [countries, setCountries] = useState<Genre[]>([]);
+  const [yearRange, setYearRange] = useState({ min: 1960, max: 2026 });
   const [loadingData, setLoadingData] = useState(true);
 
-  const [selectedGenre, setSelectedGenre] = useState("Все");
+  // Фильтры каталога (с дефолтами)
+  const [filters, setFilters] = useState<FilterState>({
+    genre: "Все",
+    country: "Все",
+    yearFrom: 1960,
+    yearTo: 2026,
+    ratingFrom: 0,
+    ratingTo: 10,
+    sort: "rating-desc",
+  });
   const [catalogVisible, setCatalogVisible] = useState(24); // пагинация каталога
   const [searchMode, setSearchMode] = useState<SearchMode>("name");
   const [searchQuery, setSearchQuery] = useState("");
@@ -42,20 +53,29 @@ export default function Home() {
     let active = true;
     (async () => {
       try {
-        const [f, t, a, g] = await Promise.all([
+        const [f, t, a, g, c] = await Promise.all([
           fetch("/api/movies/featured").then((r) => r.json()),
           fetch("/api/movies/trending").then((r) => r.json()),
           fetch("/api/movies").then((r) => r.json()),
           fetch("/api/movies/genres").then((r) => r.json()),
+          fetch("/api/movies/countries").then((r) => r.json()),
         ]);
         if (!active) return;
         setFeatured(f.movies ?? []);
         setTrending(t.movies ?? []);
         setAllMovies(a.movies ?? []);
-        // Сортируем по году для «Новинок»
         const sortedNew = [...(a.movies ?? [])].sort((x, y) => y.year - x.year).slice(0, 12);
         setNewReleases(sortedNew);
         setGenres(g.genres ?? []);
+        setCountries(c.countries ?? []);
+        if (c.yearRange) {
+          setYearRange(c.yearRange);
+          setFilters((prev) => ({
+            ...prev,
+            yearFrom: c.yearRange.min,
+            yearTo: c.yearRange.max,
+          }));
+        }
       } catch (e) {
         console.error(e);
       } finally {
@@ -141,14 +161,52 @@ export default function Home() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
-  const filteredMovies =
-    selectedGenre === "Все" ? allMovies : allMovies.filter((m) => m.genres.includes(selectedGenre));
+  // Фильтрация каталога (client-side через useMemo для мгновенного отклика)
+  const filteredMovies = useMemo(() => {
+    const result = allMovies.filter((m) => {
+      if (filters.genre !== "Все" && !m.genres.includes(filters.genre)) return false;
+      if (filters.country !== "Все" && !m.countries.includes(filters.country)) return false;
+      if (m.year < filters.yearFrom) return false;
+      if (m.year > filters.yearTo) return false;
+      if (m.rating < filters.ratingFrom) return false;
+      if (m.rating > filters.ratingTo) return false;
+      return true;
+    });
+    const sorted = [...result];
+    switch (filters.sort) {
+      case "rating-desc": sorted.sort((a, b) => b.rating - a.rating); break;
+      case "rating-asc": sorted.sort((a, b) => a.rating - b.rating); break;
+      case "year-desc": sorted.sort((a, b) => b.year - a.year); break;
+      case "year-asc": sorted.sort((a, b) => a.year - b.year); break;
+      case "views-desc": sorted.sort((a, b) => b.views - a.views); break;
+      case "title-asc": sorted.sort((a, b) => a.title.localeCompare(b.title, "ru")); break;
+    }
+    return sorted;
+  }, [allMovies, filters]);
+
+  const resetFilters = useCallback(() => {
+    setFilters({
+      genre: "Все",
+      country: "Все",
+      yearFrom: yearRange.min,
+      yearTo: yearRange.max,
+      ratingFrom: 0,
+      ratingTo: 10,
+      sort: "rating-desc",
+    });
+    setCatalogVisible(24);
+  }, [yearRange.min, yearRange.max]);
+
+  const handleFiltersChange = useCallback((next: FilterState) => {
+    setFilters(next);
+    setCatalogVisible(24);
+  }, []);
 
   // Бесконечная прокрутка каталога
   const hasMore = filteredMovies.length > catalogVisible;
   const { sentinelRef, isLoading: isLoadingMore } = useInfiniteScroll(
     () => setCatalogVisible((v) => v + 24),
-    { resetKey: selectedGenre, hasMore }
+    { resetKey: filters.genre + filters.country + filters.sort, hasMore }
   );
 
   return (
@@ -189,14 +247,14 @@ export default function Home() {
           />
         )}
 
-        {/* Каталог с фильтром по жанрам */}
+        {/* Каталог с расширенными фильтрами */}
         <section id="catalog" className="border-t border-white/5 bg-card/20 py-8">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <h2 className="text-xl font-bold tracking-tight sm:text-2xl">Каталог</h2>
                 <p className="mt-0.5 text-sm text-muted-foreground">
-                  <span className="font-semibold text-foreground">{filteredMovies.length}</span> {pluralMovies(filteredMovies.length)} · категория «{selectedGenre}»
+                  <span className="font-semibold text-foreground">{filteredMovies.length}</span> {pluralMovies(filteredMovies.length)} в коллекции
                 </p>
               </div>
               {favorites.size > 0 && (
@@ -205,13 +263,14 @@ export default function Home() {
                 </div>
               )}
             </div>
-            <GenreFilter
+            <FilterPanel
+              filters={filters}
+              onChange={handleFiltersChange}
+              onReset={resetFilters}
               genres={genres}
-              selected={selectedGenre}
-              onSelect={(g) => {
-                setSelectedGenre(g);
-                setCatalogVisible(24);
-              }}
+              countries={countries}
+              yearRange={yearRange}
+              resultCount={filteredMovies.length}
             />
           </div>
           <div className="mt-6">

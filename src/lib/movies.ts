@@ -13274,4 +13274,76 @@ export function getSimilarMovies(id: string, limit = 6): Movie[] {
     .map((x) => x.m);
 }
 
+// ----- Расширенная фильтрация -----
+
+export interface MovieFilters {
+  genre?: string;       // "Все" или конкретный жанр
+  country?: string;    // "Все" или конкретная страна
+  yearFrom?: number;    // минимальный год
+  yearTo?: number;      // максимальный год
+  ratingFrom?: number;   // минимальный рейтинг (0-10)
+  ratingTo?: number;     // максимальный рейтинг (0-10)
+  sort?: SortOption;    // сортировка
+}
+
+export type SortOption =
+  | "rating-desc"    // по рейтингу ↓
+  | "rating-asc"     // по рейтингу ↑
+  | "year-desc"      // по новизне ↓
+  | "year-asc"       // по году ↑
+  | "views-desc"     // по популярности ↓
+  | "title-asc";     // по названию А-Я
+
+export function filterMovies(filters: MovieFilters): Movie[] {
+  let result = movies().filter((m) => {
+    // Жанр
+    if (filters.genre && filters.genre !== "Все" && !m.genres.includes(filters.genre)) {
+      return false;
+    }
+    // Страна
+    if (filters.country && filters.country !== "Все" && !m.countries.includes(filters.country)) {
+      return false;
+    }
+    // Год: диапазон
+    if (filters.yearFrom && m.year < filters.yearFrom) return false;
+    if (filters.yearTo && m.year > filters.yearTo) return false;
+    // Рейтинг: диапазон
+    if (filters.ratingFrom && m.rating < filters.ratingFrom) return false;
+    if (filters.ratingTo && m.rating > filters.ratingTo) return false;
+    return true;
+  });
+
+  // Сортировка
+  const sort = filters.sort ?? "rating-desc";
+  result = [...result];
+  switch (sort) {
+    case "rating-desc": result.sort((a, b) => b.rating - a.rating); break;
+    case "rating-asc": result.sort((a, b) => a.rating - b.rating); break;
+    case "year-desc": result.sort((a, b) => b.year - a.year); break;
+    case "year-asc": result.sort((a, b) => a.year - b.year); break;
+    case "views-desc": result.sort((a, b) => b.views - a.views); break;
+    case "title-asc": result.sort((a, b) => a.title.localeCompare(b.title, "ru")); break;
+  }
+  return result;
+}
+
+export function getAllCountries(): Genre[] {
+  const counts = new Map<string, number>();
+  for (const m of movies()) {
+    for (const c of m.countries) counts.set(c, (counts.get(c) ?? 0) + 1);
+  }
+  return [
+    { name: "Все", count: movies().length },
+    ...Array.from(counts.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count),
+  ];
+}
+
+export function getYearRange(): { min: number; max: number } {
+  const years = movies().map((m) => m.year).filter(Boolean);
+  if (years.length === 0) return { min: 1960, max: 2026 };
+  return { min: Math.min(...years), max: Math.max(...years) };
+}
+
 export const TOTAL_MOVIES = MOVIES.length;
