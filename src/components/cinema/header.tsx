@@ -1,15 +1,41 @@
 "use client";
 
-import { Play, Search, Menu } from "lucide-react";
+import { useState } from "react";
+import { useSession, signOut } from "next-auth/react";
+import { Play, Search, Menu, LogIn, LogOut, User, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { AuthDialog } from "./auth-dialog";
 import { cn } from "@/lib/utils";
 
 interface HeaderProps {
   onSearchClick: () => void;
   onLogoClick: () => void;
+  favoritesCount?: number;
+  onFavoritesClick?: () => void;
 }
 
-export function Header({ onSearchClick, onLogoClick }: HeaderProps) {
+export function Header({ onSearchClick, onLogoClick, favoritesCount = 0, onFavoritesClick }: HeaderProps) {
+  const { data: session, status } = useSession();
+  const [authOpen, setAuthOpen] = useState(false);
+  const authenticated = status === "authenticated";
+
+  const userName = session?.user?.name || session?.user?.email || "Пользователь";
+  const initials = userName
+    .split(/[\s@.]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase())
+    .join("");
+
   return (
     <header className="sticky top-0 z-40 w-full border-b border-white/5 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
@@ -53,21 +79,77 @@ export function Header({ onSearchClick, onLogoClick }: HeaderProps) {
             <Search className="h-4 w-4" />
             <span className="hidden sm:inline">Поиск</span>
           </Button>
-          <Button
-            size="sm"
-            className="hidden bg-cinema text-white hover:bg-cinema/90 sm:inline-flex"
-            onClick={() => {
-              const el = document.getElementById("catalog");
-              el?.scrollIntoView({ behavior: "smooth" });
-            }}
-          >
-            Смотреть
-          </Button>
-          <Button variant="ghost" size="icon" className="md:hidden" aria-label="Меню">
+
+          {/* Кнопка избранного */}
+          {favoritesCount > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onFavoritesClick}
+              className="gap-1.5 text-muted-foreground hover:text-cinema"
+            >
+              <Heart className="h-4 w-4 fill-cinema text-cinema" />
+              <span className="hidden sm:inline">{favoritesCount}</span>
+            </Button>
+          )}
+
+          {/* Кнопка входа / пользовательское меню */}
+          {authenticated ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 rounded-full border border-white/10 bg-card pl-1 pr-3 py-1 transition hover:border-cinema">
+                  <Avatar className="h-7 w-7">
+                    <AvatarFallback className="bg-cinema/20 text-xs font-bold text-cinema">
+                      {initials || "?"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="hidden text-sm font-medium sm:inline">
+                    {userName.split(" ")[0]}
+                  </span>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel className="flex flex-col gap-0.5">
+                  <span className="text-sm font-medium">{userName}</span>
+                  {session?.user?.email && (
+                    <span className="text-xs text-muted-foreground">{session.user.email}</span>
+                  )}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {favoritesCount > 0 && (
+                  <DropdownMenuItem onClick={onFavoritesClick} className="gap-2">
+                    <Heart className="h-4 w-4 fill-cinema text-cinema" />
+                    Избранное ({favoritesCount})
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => signOut({ callbackUrl: "/" })}
+                  className="gap-2 text-red-400 focus:text-red-400"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Выйти
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button
+              size="sm"
+              className="gap-2 bg-cinema text-white hover:bg-cinema/90"
+              onClick={() => setAuthOpen(true)}
+            >
+              <LogIn className="h-4 w-4" />
+              <span className="hidden sm:inline">Войти</span>
+            </Button>
+          )}
+
+          <Button variant="ghost" size="icon" className="hidden md:inline-flex" aria-label="Меню">
             <Menu className="h-5 w-5" />
           </Button>
         </div>
       </div>
+
+      <AuthDialog open={authOpen} onOpenChange={setAuthOpen} />
     </header>
   );
 }

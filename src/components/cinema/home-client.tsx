@@ -11,6 +11,7 @@ import { MovieModal } from "@/components/cinema/movie-modal";
 import { Footer } from "@/components/cinema/footer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
+import { useFavorites } from "@/hooks/use-favorites";
 import type { Movie, Genre } from "@/lib/types";
 
 type SearchMode = "id" | "name" | "torrent";
@@ -60,7 +61,8 @@ export function HomeClient({ initialData }: HomeClientProps) {
   const [similar, setSimilar] = useState<Movie[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
 
-  const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  // Избранное: localStorage для гостей + сервер для авторизованных
+  const { favorites, toggleFavorite, isFavorite } = useFavorites();
 
   // NewReleases вычисляем из SSR allMovies (сортировка по году)
   useEffect(() => {
@@ -69,30 +71,6 @@ export function HomeClient({ initialData }: HomeClientProps) {
       setNewReleases(sortedNew);
     }
   }, [allMovies]);
-
-  // Восстановление избранного из localStorage
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem("cinema:favorites");
-      if (raw) setFavorites(new Set(JSON.parse(raw)));
-    } catch {
-      /* ignore */
-    }
-  }, []);
-
-  const toggleFavorite = useCallback((movie: Movie) => {
-    setFavorites((prev) => {
-      const next = new Set(prev);
-      if (next.has(movie.id)) next.delete(movie.id);
-      else next.add(movie.id);
-      try {
-        localStorage.setItem("cinema:favorites", JSON.stringify([...next]));
-      } catch {
-        /* ignore */
-      }
-      return next;
-    });
-  }, []);
 
   // Открытие модального окна с подробностями + похожие
   const openMovie = useCallback(async (movie: Movie) => {
@@ -194,7 +172,12 @@ export function HomeClient({ initialData }: HomeClientProps) {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <Header onSearchClick={handleHeaderSearch} onLogoClick={handleLogoClick} />
+      <Header
+        onSearchClick={handleHeaderSearch}
+        onLogoClick={handleLogoClick}
+        favoritesCount={favorites.size}
+        onFavoritesClick={() => document.getElementById("favorites")?.scrollIntoView({ behavior: "smooth" })}
+      />
 
       <main className="flex-1">
         {/* Hero */}
@@ -215,6 +198,18 @@ export function HomeClient({ initialData }: HomeClientProps) {
           loading={searchLoading}
           onPlay={openMovie}
         />
+
+        {/* Избранное (только если есть избранные фильмы) */}
+        {!loadingData && favorites.size > 0 && (
+          <MovieRow
+            id="favorites"
+            title="Ваше избранное"
+            subtitle={`${favorites.size} ${favorites.size === 1 ? "фильм" : favorites.size < 5 ? "фильма" : "фильмов"} в подборке`}
+            movies={allMovies.filter((m) => favorites.has(m.id))}
+            onPlay={openMovie}
+            onInfo={openMovie}
+          />
+        )}
 
         {/* В тренде */}
         {loadingData ? (
