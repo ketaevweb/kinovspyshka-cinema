@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { IframePlayer } from "./iframe-player";
+import { PlayerPanel } from "./player-panel";
 import { MovieCard } from "./movie-card";
 import {
   Star,
@@ -17,8 +17,6 @@ import {
   Share2,
   Plus,
   Check,
-  ExternalLink,
-  PlayCircle,
 } from "lucide-react";
 import type { Movie } from "@/lib/types";
 
@@ -54,30 +52,16 @@ export function MovieModal({
         <DialogTitle className="sr-only">{movie.title}</DialogTitle>
         <ScrollArea className="cinema-scroll max-h-[92vh]">
           <div className="p-3 sm:p-4">
-            {/* Плеер — iframe с референс-кинотеатром по ID Кинопоиска */}
-            <div className="overflow-hidden rounded-xl">
-              <IframePlayer
-                key={movie.id}
-                kinopoiskId={movie.kinopoiskId}
-                title={movie.title}
-              />
-            </div>
-
-            {/* Подпись под плеером */}
-            <p className="mt-2 flex items-center gap-1.5 px-1 text-xs text-muted-foreground sm:px-2">
-              <PlayCircle className="h-3.5 w-3.5 text-cinema" />
-              Видео загружается с kinopoisk.ws по ID {movie.kinopoiskId}. Если
-              плеер не появился —{" "}
-              <a
-                href={`https://fzz-0ejfn0o.troutcdn.site/${movie.kinopoiskId}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-0.5 text-cinema hover:underline"
-              >
-                открыть в новой вкладке <ExternalLink className="h-3 w-3" />
-              </a>
-              .
-            </p>
+            {/* Панель просмотра — открывает видео в новой вкладке */}
+            <PlayerPanel
+              key={movie.id}
+              kinopoiskId={movie.kinopoiskId}
+              title={movie.title}
+              originalTitle={movie.originalTitle}
+              year={movie.year}
+              backdropUrl={movie.backdropUrl}
+              posterUrl={movie.posterUrl}
+            />
 
             {/* Инфо о фильме */}
             <div className="mt-4 px-1 sm:px-2">
