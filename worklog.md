@@ -245,3 +245,41 @@ Stage Summary:
 - Репо на GitHub: https://github.com/ketaevweb/kinovspyshka-cinema
 - Сайт на Vercel: https://kinovspyshka-cinema.vercel.app (с авто-деплоем из main)
 - При клике на фильм → troutcdn.site/{настоящий_kpId} → реальный просмотр.
+
+---
+Task ID: 9
+Agent: main
+Task: Этап 1 плана улучшений — быстрые победы (UX, next/image, live-search, SEO, PWA).
+
+Work Log:
+- Создал хук useInfiniteScroll (IntersectionObserver): автоподгрузка 24 карточек при попадании sentinel в viewport, скелетоны при подгрузке, сброс при смене жанра.
+- Создал хук useDebounce (250мс) для live-search без дубль-запросов.
+- Заменил кнопку «Показать ещё» на бесконечную прокрутку: при скролле 24→48→72→96 карточек, счётчик «Показано N из 600».
+- Переписал SearchSection: live-подсказки с постерами + названием + годом + жанром + рейтингом, клавиатурная навигация (↑↓ Enter Esc), закрытие при клике вне, фолбэк на kinopoisk.ws при пустом результате.
+- Обновил API /api/search: параметр limit (1–60).
+- Перевёл все <img> на next/image с AVIF/WebP оптимизацией: MoviePoster (fill, sizes responsive), PlayerPanel (priority), HeroCarousel (priority, 100vw). Настроил next.config.ts: formats: avif/webp, deviceSizes/imageSizes.
+- SEO: JSON-LD WebSite schema с SearchAction, расширенные метаданные (metadataBase, alternates.canonical, robots, openGraph locale ru_RU, twitter card), динамический title «600 фильмов в HD».
+- Создал sitemap.ts (главная + якоря жанров) и robots.ts (Allow /, Disallow /api/, sitemap). Удалил конфликтующий public/robots.txt.
+- PWA: создал manifest.ts (name, short_name, icons 192/512, shortcuts Каталог/Поиск/Тренды, theme_color #e50914, standalone).
+- Сгенерировал иконку через Image Generation (кинохлопушка с play triangle), конвертировал в 192/512/apple-touch-180/favicon-32 через PIL.
+- Lint чистый (исправил 2 ошибки: setState в effect → производный флаг, ref в render → обновление в effect).
+- Удалил старые image-search постеры из movies.ts (теперь все локальные).
+
+Self-verification:
+- Local: title обновился, JSON-LD в head, manifest подключён, иконки 192/apple-touch загружены.
+- Live-search: ввод «матр» → выпадают подсказки (Зима в Простоквашино, Трое из Простоквашино, Каникулы в Простоквашино) с постерами и рейтингами ★ 8.8.
+- Бесконечная прокрутка: после скролла 24→96 карточек, «Показано 96 из 600».
+- VLM подтвердил: «поле поиска с выпадающими подсказками, постеры фильмов, названия, рейтинги ★ 8.8».
+- Production (https://kinovspyshka-cinema.vercel.app): 200 OK, title «КиноВспышка — онлайн-кинотеатр: 600 фильмов в HD», JSON-LD application/ld+json, robots.txt 200, sitemap.xml 200, manifest 200, icon-192 35KB, live search API 4 результата.
+- next/image: 56 оптимизированных изображений, 0 битых, нет ошибок консоли.
+
+Stage Summary:
+- Бесконечная прокрутка вместо кнопки (24→96→...→600).
+- Live-search с debounce и выпадающими подсказками (постеры + рейтинги).
+- next/image с AVIF/WebP оптимизацией всех изображений.
+- SEO: JSON-LD, расширенные метаданные, robots, sitemap.
+- PWA: manifest + иконки (установка на дом экран).
+- Деплой на Vercel: READY, авто-деплой из main.
+- GitHub: запушен коммит 1c63a247, всё на https://github.com/ketaevweb/kinovspyshka-cinema
+
+Осталось из плана: расширенная фильтрация (год/рейтинг/страна/сортировка) — Этап 1.2, переносится на следующую итерацию.
