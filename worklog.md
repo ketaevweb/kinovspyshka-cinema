@@ -349,3 +349,33 @@ Stage Summary:
 - 11 курированных коллекций расширили контент главной страницы (Топ-250, по 6 режиссёрам, по странам, по жанрам).
 - Модалка стала визуально богаче: актёрский состав с аватарами-инициалами.
 - Сайт: https://kinovspyshka-cinema.vercel.app (production READY).
+
+---
+Task ID: 12
+Agent: main
+Task: Этап 5 — SSR начальных данных + ISR кэширование API.
+
+Work Log:
+- Разделил page.tsx: создал server component (page.tsx) + client component (home-client.tsx).
+- page.tsx теперь server component: импортирует данные напрямую из movies.ts (getFeaturedMovies, getTrendingMovies, getAllMovies, getAllGenres, getAllCountries, getYearRange, getCollections) и передаёт в HomeClient через props initialData.
+- force-static + revalidate=3600 (ISR): страница пересобирается раз в час.
+- home-client.tsx: принимает SSR-данные через props, без useEffect fetch. loadingData=false по умолчанию. NewReleases вычисляется из SSR allMovies. Фильтры года инициализируются из SSR yearRange.
+- ISR для API: featured, trending, genres, countries, collections — revalidate=3600 (был force-dynamic).
+- Lint чистый. dev-сервер 200 OK.
+
+Self-verification (Agent Browser на production):
+- 15 секций h2 сразу (SSR), 0 скелетонов (раньше были), 174 постера.
+- Нет ошибок консоли/гидрации.
+- Данные в первом HTML: «Начало», «Топ-250 Кинопоиска», «Кристофер Нолан», «Зелёная миля».
+- Время отклика production: 0.30с (раньше с fetch ~0.76с — ускорение в 2.5×).
+- API: x-vercel-cache: PRERENDER (ISR работает).
+
+Production (https://kinovspyshka-cinema.vercel.app):
+- 200 OK, 1.9MB HTML (с SSR-данными).
+- Деплой READY (sha 45f6bfb8).
+
+Stage Summary:
+- SSR: данные главной страницы рендерятся на сервере в первом HTML — мгновенная загрузка без скелетонов.
+- ISR: API кэшируется на час, страница пересобирается раз в час.
+- Скорость: 0.30с вместо 0.76с (ускорение ~2.5×).
+- SEO улучшен: поисковики видят контент сразу в HTML.
