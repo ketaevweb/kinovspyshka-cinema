@@ -27,8 +27,11 @@ import {
   Send,
   MessageCircle,
   Copy,
+  Trophy,
+  Lightbulb,
 } from "lucide-react";
 import { toast } from "sonner";
+import { getExtendedData } from "@/lib/extended-data";
 import type { Movie } from "@/lib/types";
 
 interface MovieModalProps {
@@ -195,6 +198,76 @@ export function MovieModal({
                   </Button>
                 </div>
               </div>
+
+              {/* Награды и факты */}
+              {(() => {
+                const ext = getExtendedData(movie.kinopoiskId);
+                if (!ext) return null;
+                const hasAwards = ext.awards.length > 0;
+                const hasFacts = ext.facts.length > 0;
+                if (!hasAwards && !hasFacts) return null;
+                return (
+                  <div className="mt-8 space-y-6">
+                    {/* Топ-250 */}
+                    {ext.top250 && (
+                      <div className="flex items-center gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4">
+                        <Trophy className="h-8 w-8 text-amber-500" />
+                        <div>
+                          <p className="font-bold text-amber-400">#{ext.top250} в Топ-250 Кинопоиска</p>
+                          <p className="text-xs text-muted-foreground">Входит в число лучших фильмов всех времён</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Награды */}
+                    {hasAwards && (
+                      <div>
+                        <h3 className="mb-3 flex items-center gap-2 text-lg font-bold">
+                          <Trophy className="h-5 w-5 text-amber-500" />
+                          Награды
+                        </h3>
+                        <div className="flex flex-wrap gap-2">
+                          {ext.awards.map((aw, i) => (
+                            <div
+                              key={i}
+                              className="flex items-center gap-2 rounded-lg border border-white/10 bg-card/60 px-3 py-2"
+                            >
+                              <Trophy className="h-4 w-4 text-amber-500" />
+                              <div>
+                                <p className="text-sm font-medium">{aw.title}</p>
+                                {aw.year > 0 && (
+                                  <p className="text-xs text-muted-foreground">{aw.year}</p>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Факты */}
+                    {hasFacts && (
+                      <div>
+                        <h3 className="mb-3 flex items-center gap-2 text-lg font-bold">
+                          <Lightbulb className="h-5 w-5 text-yellow-500" />
+                          Интересные факты
+                        </h3>
+                        <div className="space-y-2">
+                          {ext.facts.map((fact, i) => (
+                            <div
+                              key={i}
+                              className="flex gap-2 rounded-lg border border-white/5 bg-card/40 p-3 text-sm text-foreground/80"
+                            >
+                              <span className="text-cinema">→</span>
+                              <p>{fact}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* Похожие фильмы */}
               {similar.length > 0 && (

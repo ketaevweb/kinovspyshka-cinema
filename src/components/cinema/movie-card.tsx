@@ -1,10 +1,11 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Play, Star, Plus, Info, GitCompare } from "lucide-react";
+import { Play, Star, Plus, Info, GitCompare, Trophy } from "lucide-react";
 import type { Movie } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
+import { getTop250Rank } from "@/lib/extended-data";
 import { MoviePoster } from "./movie-poster";
 
 interface MovieCardProps {
@@ -43,6 +44,18 @@ export function MovieCard({ movie, onPlay, onInfo, onCompare, inCompare, variant
         <div className="absolute right-2 top-2 z-10 rounded border border-white/40 bg-black/60 px-1 py-0.5 text-[10px] font-medium text-white/90 backdrop-blur">
           {movie.ageRating}
         </div>
+
+        {/* Бейдж Топ-250 Кинопоиска */}
+        {(() => {
+          const rank = getTop250Rank(movie.kinopoiskId);
+          if (!rank) return null;
+          return (
+            <div className="absolute left-2 top-10 z-10 flex items-center gap-0.5 rounded-md bg-gradient-to-r from-amber-600 to-yellow-600 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-md">
+              <Trophy className="h-2.5 w-2.5" />
+              #{rank}
+            </div>
+          );
+        })()}
 
         {/* Hover-оверлей с действиями */}
         <div className="absolute inset-0 z-20 flex flex-col justify-end bg-gradient-to-t from-black/95 via-black/30 to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
