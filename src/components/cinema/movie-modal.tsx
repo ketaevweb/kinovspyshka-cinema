@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { VideoPlayer } from "./video-player";
+import { IframePlayer } from "./iframe-player";
 import { MovieCard } from "./movie-card";
 import {
   Star,
@@ -17,6 +17,8 @@ import {
   Share2,
   Plus,
   Check,
+  ExternalLink,
+  PlayCircle,
 } from "lucide-react";
 import type { Movie } from "@/lib/types";
 
@@ -52,16 +54,30 @@ export function MovieModal({
         <DialogTitle className="sr-only">{movie.title}</DialogTitle>
         <ScrollArea className="cinema-scroll max-h-[92vh]">
           <div className="p-3 sm:p-4">
-            {/* Плеер */}
+            {/* Плеер — iframe с референс-кинотеатром по ID Кинопоиска */}
             <div className="overflow-hidden rounded-xl">
-              <VideoPlayer
+              <IframePlayer
                 key={movie.id}
-                src={movie.videoUrl}
-                poster={movie.backdropUrl || movie.posterUrl}
+                kinopoiskId={movie.kinopoiskId}
                 title={movie.title}
-                autoPlay={open}
               />
             </div>
+
+            {/* Подпись под плеером */}
+            <p className="mt-2 flex items-center gap-1.5 px-1 text-xs text-muted-foreground sm:px-2">
+              <PlayCircle className="h-3.5 w-3.5 text-cinema" />
+              Видео загружается с kinopoisk.ws по ID {movie.kinopoiskId}. Если
+              плеер не появился —{" "}
+              <a
+                href={`https://fzz-0ejfn0o.troutcdn.site/${movie.kinopoiskId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-0.5 text-cinema hover:underline"
+              >
+                открыть в новой вкладке <ExternalLink className="h-3 w-3" />
+              </a>
+              .
+            </p>
 
             {/* Инфо о фильме */}
             <div className="mt-4 px-1 sm:px-2">
@@ -143,8 +159,16 @@ export function MovieModal({
                   <Button variant="secondary" className="gap-2">
                     <Share2 className="h-4 w-4" /> Поделиться
                   </Button>
-                  <Button variant="secondary" className="gap-2" onClick={() => onPlay(movie)}>
-                    <Film className="h-4 w-4" /> Трейлер
+                  <Button variant="secondary" className="gap-2" asChild>
+                    <a
+                      href={`https://www.youtube.com/results?search_query=${encodeURIComponent(
+                        `${movie.originalTitle} ${movie.year} трейлер`
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Film className="h-4 w-4" /> Трейлер
+                    </a>
                   </Button>
                 </div>
               </div>

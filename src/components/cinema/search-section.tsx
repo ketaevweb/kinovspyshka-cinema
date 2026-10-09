@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Hash, FileText, Download, ArrowRight } from "lucide-react";
+import { Search, Hash, FileText, Download, ArrowRight, ExternalLink } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -132,9 +132,22 @@ export function SearchSection({
         {!loading && (query.trim() !== "" || results.length > 0) && (
           <div className="mt-8">
             {results.length === 0 ? (
-              <p className="text-center text-sm text-muted-foreground">
-                По запросу «{query}» ничего не найдено. Попробуйте другое название или ID.
-              </p>
+              <div className="mx-auto max-w-md text-center">
+                <p className="text-sm text-muted-foreground">
+                  По запросу «{query}» ничего не найдено в нашем каталоге.
+                </p>
+                <a
+                  href={`https://fzz-0ejfn0o.troutcdn.site/searchname.php?name=${encodeURIComponent(
+                    query.trim()
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-cinema px-4 py-2 text-sm font-medium text-white transition hover:bg-cinema/90"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  Искать «{query.trim()}» на kinopoisk.ws
+                </a>
+              </div>
             ) : (
               <>
                 <p className="mb-3 text-sm text-muted-foreground">
