@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Movie } from "@/lib/types";
+import { MoviePoster } from "./movie-poster";
 
 type SearchMode = "id" | "name" | "torrent";
 
@@ -160,7 +161,9 @@ export function SearchSection({
                       onClick={() => onPlay(m)}
                       className="group flex items-center gap-3 rounded-xl border border-white/5 bg-background/60 p-2 text-left transition hover:border-cinema/40 hover:bg-card"
                     >
-                      <PosterThumb src={m.posterUrl} alt={m.title} />
+                      <div className="h-14 w-10 shrink-0 overflow-hidden rounded">
+                        <MoviePoster movie={m} showTitle={false} />
+                      </div>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-semibold">{m.title}</p>
                         <p className="truncate text-xs text-muted-foreground">
@@ -176,25 +179,5 @@ export function SearchSection({
         )}
       </div>
     </section>
-  );
-}
-
-function PosterThumb({ src, alt }: { src: string; alt: string }) {
-  if (!src) {
-    return (
-      <div className="flex h-14 w-10 shrink-0 items-center justify-center rounded bg-gradient-to-br from-zinc-700 to-zinc-900 text-[10px] text-white/40">
-        HD
-      </div>
-    );
-  }
-  return (
-    <img
-      src={src}
-      alt={alt}
-      className="h-14 w-10 shrink-0 rounded object-cover"
-      onError={(e) => {
-        (e.currentTarget as HTMLImageElement).style.visibility = "hidden";
-      }}
-    />
   );
 }

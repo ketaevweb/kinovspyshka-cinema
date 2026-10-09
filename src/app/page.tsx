@@ -10,6 +10,8 @@ import { GenreFilter } from "@/components/cinema/genre-filter";
 import { MovieModal } from "@/components/cinema/movie-modal";
 import { Footer } from "@/components/cinema/footer";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { ChevronDown } from "lucide-react";
 import type { Movie, Genre } from "@/lib/types";
 
 type SearchMode = "id" | "name" | "torrent";
@@ -23,6 +25,7 @@ export default function Home() {
   const [loadingData, setLoadingData] = useState(true);
 
   const [selectedGenre, setSelectedGenre] = useState("Все");
+  const [catalogVisible, setCatalogVisible] = useState(24); // пагинация каталога
   const [searchMode, setSearchMode] = useState<SearchMode>("name");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Movie[]>([]);
@@ -187,7 +190,7 @@ export default function Home() {
               <div>
                 <h2 className="text-xl font-bold tracking-tight sm:text-2xl">Каталог</h2>
                 <p className="mt-0.5 text-sm text-muted-foreground">
-                  {filteredMovies.length} {pluralMovies(filteredMovies.length)} в категории «{selectedGenre}»
+                  <span className="font-semibold text-foreground">{filteredMovies.length}</span> {pluralMovies(filteredMovies.length)} · категория «{selectedGenre}»
                 </p>
               </div>
               {favorites.size > 0 && (
@@ -199,12 +202,42 @@ export default function Home() {
             <GenreFilter
               genres={genres}
               selected={selectedGenre}
-              onSelect={setSelectedGenre}
+              onSelect={(g) => {
+                setSelectedGenre(g);
+                setCatalogVisible(24);
+              }}
             />
           </div>
           <div className="mt-6">
-            {loadingData ? <GridSkeleton /> : <MovieGrid movies={filteredMovies} onPlay={openMovie} onInfo={openMovie} />}
+            {loadingData ? (
+              <GridSkeleton />
+            ) : (
+              <MovieGrid
+                movies={filteredMovies}
+                onPlay={openMovie}
+                onInfo={openMovie}
+                limit={catalogVisible}
+              />
+            )}
           </div>
+
+          {/* Пагинация «Показать ещё» */}
+          {!loadingData && filteredMovies.length > catalogVisible && (
+            <div className="mt-8 flex flex-col items-center gap-2">
+              <Button
+                variant="secondary"
+                size="lg"
+                onClick={() => setCatalogVisible((v) => v + 24)}
+                className="gap-2 rounded-full border-white/10 bg-card hover:border-cinema hover:text-cinema"
+              >
+                <ChevronDown className="h-4 w-4" />
+                Показать ещё 24
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                Показано {Math.min(catalogVisible, filteredMovies.length)} из {filteredMovies.length}
+              </p>
+            </div>
+          )}
         </section>
 
         {/* Новинки */}

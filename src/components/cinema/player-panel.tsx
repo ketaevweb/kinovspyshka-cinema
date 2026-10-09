@@ -55,7 +55,7 @@ export function PlayerPanel({
         className
       )}
     >
-      {/* Кинематографичный фон */}
+      {/* Кинематографичный фон: реальный backdrop при наличии, иначе градиент */}
       <div className="absolute inset-0">
         {bg && !imgError ? (
           <img
