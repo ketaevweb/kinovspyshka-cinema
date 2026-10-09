@@ -72,24 +72,34 @@ function backgroundFor(movie: Movie): string {
 }
 
 /**
- * Процедурная обложка фильма.
+ * Обложка фильма.
  *
- * Рисует уникальный, детерминированный постер из названия + жанра:
- *  - градиент на основе жанровой палитры + хеша названия
- *  - перфорация плёнки по бокам
- *  - круг с инициалами, название, год, жанр
- *
- * Если у фильма есть реальный posterUrl — сначала показываем <img>, при ошибке
- * автоматически переключаемся на процедурную обложку (ноль битых картинок).
+ * Каскад источников (по приоритету):
+ *  1. Реальный постер Кинопоиска: https://st.kp.yandex.net/images/film_iphone/iphone360_{kpId}.jpg
+ *     (паттерн подтверждён: страница troutcdn.site/{id} ссылается именно на этот URL).
+ *  2. Старый posterUrl из image-search (если есть).
+ *  3. Процедурная SVG-обложка (детерминированный градиент + инициалы) —
+ *     фолбэк при ошибке загрузки, чтобы не было битых картинок.
  */
 export function MoviePoster({ movie, className, showTitle = true }: MoviePosterProps) {
-  const [imgError, setImgError] = useState(false);
-  const [imgLoaded, setImgLoaded] = useState(false);
+  const [kpImgError, setKpImgError] = useState(false);
+  const [kpImgLoaded, setKpImgLoaded] = useState(false);
+  const [oldImgError, setOldImgError] = useState(false);
+  const [oldImgLoaded, setOldImgLoaded] = useState(false);
+
+  // Primary: реальный постер Кинопоиска через наш прокси (без hotlink-блокировок).
+  // Прокси /api/poster/{kpId} грузит изображение server-side и отдаёт браузеру.
+  const kpPosterUrl = `/api/poster/${movie.kinopoiskId}`;
+  // Secondary: старый posterUrl (image-search), если есть
+  const oldPosterUrl = movie.posterUrl;
 
   const bg = backgroundFor(movie);
   const initials = initialsOf(movie.title);
   const [primary, _dark, accent] = paletteFor(movie);
-  const hasRealPoster = Boolean(movie.posterUrl) && !imgError;
+
+  const showKpPoster = !kpImgError;
+  const showOldPoster = kpImgError && oldPosterUrl && !oldImgError;
+  const showProcedural = kpImgError && (!oldPosterUrl || oldImgError);
 
   const procedural = (
     <ProceduralPoster
@@ -98,28 +108,46 @@ export function MoviePoster({ movie, className, showTitle = true }: MoviePosterP
       movie={movie}
       showTitle={showTitle}
       accent={accent}
-      className={hasRealPoster ? "opacity-40" : undefined}
+      className={showProcedural ? undefined : "opacity-40"}
     />
   );
 
-  if (!hasRealPoster) {
+  // Только процедурная
+  if (showProcedural) {
     return <div className={cn("relative h-full w-full overflow-hidden", className)}>{procedural}</div>;
   }
 
   return (
     <div className={cn("relative h-full w-full overflow-hidden bg-zinc-900", className)}>
       {procedural}
-      <img
-        src={movie.posterUrl}
-        alt={movie.title}
-        loading="lazy"
-        onLoad={() => setImgLoaded(true)}
-        onError={() => setImgError(true)}
-        className={cn(
-          "absolute inset-0 h-full w-full object-cover transition-opacity duration-500",
-          imgLoaded ? "opacity-100" : "opacity-0"
-        )}
-      />
+      {/* Secondary: старый posterUrl (image-search) */}
+      {showOldPoster && (
+        <img
+          src={oldPosterUrl}
+          alt={movie.title}
+          loading="lazy"
+          onLoad={() => setOldImgLoaded(true)}
+          onError={() => setOldImgError(true)}
+          className={cn(
+            "absolute inset-0 h-full w-full object-cover transition-opacity duration-500",
+            oldImgLoaded ? "opacity-100" : "opacity-0"
+          )}
+        />
+      )}
+      {/* Primary: реальный постер Кинопоиска через наш прокси */}
+      {showKpPoster && (
+        <img
+          src={kpPosterUrl}
+          alt={movie.title}
+          loading="lazy"
+          onLoad={() => setKpImgLoaded(true)}
+          onError={() => setKpImgError(true)}
+          className={cn(
+            "absolute inset-0 h-full w-full object-cover transition-opacity duration-500",
+            kpImgLoaded ? "opacity-100" : "opacity-0"
+          )}
+        />
+      )}
     </div>
   );
 }

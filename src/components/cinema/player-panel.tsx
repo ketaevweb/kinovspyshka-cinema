@@ -42,7 +42,10 @@ export function PlayerPanel({
     originalTitle ? `${originalTitle} ${year ?? ""}`.trim() : title
   )}`;
 
-  const bg = backdropUrl || posterUrl || "";
+  // Фон: реальный постер Кинопоиска через наш прокси (есть для всех фильмов с KP ID),
+  // либо старый backdrop/poster, либо градиент.
+  const kpPosterUrl = `/api/poster/${kinopoiskId}`;
+  const bg = kpPosterUrl || backdropUrl || posterUrl || "";
 
   const openWatch = () => {
     window.open(watchUrl, "_blank", "noopener,noreferrer");
@@ -62,6 +65,7 @@ export function PlayerPanel({
             src={bg}
             alt={title}
             className="h-full w-full object-cover opacity-40"
+            referrerPolicy="no-referrer"
             onError={() => setImgError(true)}
           />
         ) : (
