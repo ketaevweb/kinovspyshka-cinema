@@ -16,6 +16,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { AuthDialog } from "./auth-dialog";
 import { ThemeToggle } from "./theme-toggle";
 import { LangToggle } from "./lang-toggle";
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 interface HeaderProps {
@@ -46,6 +47,7 @@ export function Header({
   // Используем внешний control если передан, иначе внутренний
   const isAuthOpen = authOpen ?? internalAuthOpen;
   const setAuthOpen = onAuthOpenChange ?? setInternalAuthOpen;
+  const { t } = useI18n();
 
   const userName = session?.user?.name || session?.user?.email || "Пользователь";
   const initials = userName
@@ -61,7 +63,7 @@ export function Header({
         <button
           onClick={onLogoClick}
           className="group flex items-center gap-2 transition-opacity hover:opacity-90"
-          aria-label="На главную"
+          aria-label={t("nav.home")}
         >
           <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-cinema shadow-[0_0_20px_oklch(0.605_0.234_27.4/0.5)]">
             <Play className="h-5 w-5 fill-white text-white" />
@@ -73,10 +75,10 @@ export function Header({
 
         <nav className="hidden items-center gap-1 md:flex">
           {[
-            { label: "Главная", href: "#hero" },
-            { label: "Каталог", href: "#catalog" },
-            { label: "В тренде", href: "#trending" },
-            { label: "Новинки", href: "#new" },
+            { label: t("nav.home"), href: "#hero" },
+            { label: t("nav.catalog"), href: "#catalog" },
+            { label: t("nav.trending"), href: "#trending" },
+            { label: t("nav.new"), href: "#new" },
           ].map((item) => (
             <a
               key={item.label}
@@ -96,7 +98,7 @@ export function Header({
             className={cn("gap-2 text-muted-foreground hover:text-foreground")}
           >
             <Search className="h-4 w-4" />
-            <span className="hidden sm:inline">Поиск</span>
+            <span className="hidden sm:inline">{t("nav.search")}</span>
           </Button>
 
           <ThemeToggle />
@@ -114,7 +116,7 @@ export function Header({
               )}
             >
               <GitCompare className="h-4 w-4" />
-              <span className="hidden sm:inline">Сравнить</span>
+              <span className="hidden sm:inline">{t("nav.compare")}</span>
               {compareCount > 0 && (
                 <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-cinema px-1 text-xs font-bold text-white">
                   {compareCount}
@@ -162,7 +164,7 @@ export function Header({
                 {favoritesCount > 0 && (
                   <DropdownMenuItem onClick={onFavoritesClick} className="gap-2">
                     <Heart className="h-4 w-4 fill-cinema text-cinema" />
-                    Избранное ({favoritesCount})
+                    {t("catalog.favorites")} ({favoritesCount})
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuSeparator />
@@ -171,7 +173,7 @@ export function Header({
                   className="gap-2 text-red-400 focus:text-red-400"
                 >
                   <LogOut className="h-4 w-4" />
-                  Выйти
+                  {t("auth.logout")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -182,7 +184,7 @@ export function Header({
               onClick={() => setAuthOpen(true)}
             >
               <LogIn className="h-4 w-4" />
-              <span className="hidden sm:inline">Войти</span>
+              <span className="hidden sm:inline">{t("nav.login")}</span>
             </Button>
           )}
 

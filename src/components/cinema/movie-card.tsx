@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Play, Star, Plus, Info, GitCompare } from "lucide-react";
 import type { Movie } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n";
 import { MoviePoster } from "./movie-poster";
 
 interface MovieCardProps {
@@ -16,6 +17,7 @@ interface MovieCardProps {
 }
 
 export function MovieCard({ movie, onPlay, onInfo, onCompare, inCompare, variant = "grid" }: MovieCardProps) {
+  const { t } = useI18n();
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -51,7 +53,7 @@ export function MovieCard({ movie, onPlay, onInfo, onCompare, inCompare, variant
                 onPlay(movie);
               }}
               className="flex h-9 w-9 items-center justify-center rounded-full bg-cinema text-white transition hover:scale-110"
-              aria-label={`Смотреть ${movie.title}`}
+              aria-label={`${t("movie.watch")} ${movie.title}`}
             >
               <Play className="h-4 w-4 fill-white" />
             </button>
@@ -62,7 +64,7 @@ export function MovieCard({ movie, onPlay, onInfo, onCompare, inCompare, variant
                   onInfo(movie);
                 }}
                 className="flex h-9 w-9 items-center justify-center rounded-full border border-white/40 bg-black/50 text-white transition hover:scale-110 hover:border-white"
-                aria-label={`Подробнее о ${movie.title}`}
+                aria-label={`${t("movie.info")} ${movie.title}`}
               >
                 <Info className="h-4 w-4" />
               </button>
@@ -70,7 +72,7 @@ export function MovieCard({ movie, onPlay, onInfo, onCompare, inCompare, variant
             <button
               onClick={(e) => e.stopPropagation()}
               className="ml-auto flex h-9 w-9 items-center justify-center rounded-full border border-white/40 bg-black/50 text-white transition hover:scale-110 hover:border-white"
-              aria-label="В избранное"
+              aria-label={t("movie.favorites")}
             >
               <Plus className="h-4 w-4" />
             </button>
@@ -86,7 +88,7 @@ export function MovieCard({ movie, onPlay, onInfo, onCompare, inCompare, variant
                     ? "border-cinema bg-cinema"
                     : "border-white/40 bg-black/50 hover:border-white"
                 )}
-                aria-label="В сравнение"
+                aria-label={t("movie.compare")}
               >
                 <GitCompare className="h-4 w-4" />
               </button>

@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n";
 import type { Genre } from "@/lib/types";
 import type { SortOption } from "@/lib/movies";
 
@@ -35,13 +36,13 @@ interface FilterPanelProps {
   resultCount: number;
 }
 
-const SORT_OPTIONS: { value: SortOption; label: string }[] = [
-  { value: "rating-desc", label: "По рейтингу ↓" },
-  { value: "rating-asc", label: "По рейтингу ↑" },
-  { value: "year-desc", label: "По новизне ↓" },
-  { value: "year-asc", label: "По году ↑" },
-  { value: "views-desc", label: "По популярности ↓" },
-  { value: "title-asc", label: "По названию А-Я" },
+const SORT_OPTIONS: { value: SortOption; labelKey: string }[] = [
+  { value: "rating-desc", labelKey: "sort.ratingDesc" },
+  { value: "rating-asc", labelKey: "sort.ratingAsc" },
+  { value: "year-desc", labelKey: "sort.yearDesc" },
+  { value: "year-asc", labelKey: "sort.yearAsc" },
+  { value: "views-desc", labelKey: "sort.viewsDesc" },
+  { value: "title-asc", labelKey: "sort.titleAsc" },
 ];
 
 export function FilterPanel({
@@ -53,6 +54,7 @@ export function FilterPanel({
   yearRange,
   resultCount,
 }: FilterPanelProps) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
 
   const update = (patch: Partial<FilterState>) => {
@@ -80,7 +82,7 @@ export function FilterPanel({
           )}
         >
           <SlidersHorizontal className="h-4 w-4" />
-          Фильтры
+          {t("filters.title")}
           {activeCount > 0 && (
             <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-cinema px-1.5 text-xs font-bold text-white">
               {activeCount}
@@ -98,7 +100,7 @@ export function FilterPanel({
             <SelectContent>
               {SORT_OPTIONS.map((opt) => (
                 <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
+                  {t(opt.labelKey)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -113,12 +115,12 @@ export function FilterPanel({
             className="gap-1.5 rounded-full text-xs text-muted-foreground hover:text-cinema"
           >
             <RotateCcw className="h-3.5 w-3.5" />
-            Сбросить
+            {t("filters.reset")}
           </Button>
         )}
 
         <span className="ml-auto text-xs text-muted-foreground">
-          Найдено: <span className="font-semibold text-foreground">{resultCount}</span>
+          {t("filters.found")}: <span className="font-semibold text-foreground">{resultCount}</span>
         </span>
       </div>
 
@@ -126,7 +128,7 @@ export function FilterPanel({
       {open && (
         <div className="mt-4 rounded-2xl border border-white/10 bg-card/80 p-5 backdrop-blur-xl">
           <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-sm font-semibold">Расширенные фильтры</h3>
+            <h3 className="text-sm font-semibold">{t("filters.advanced")}</h3>
             <button
               onClick={() => setOpen(false)}
               className="rounded-full p-1 text-muted-foreground transition hover:bg-white/10 hover:text-foreground"
@@ -138,7 +140,7 @@ export function FilterPanel({
 
           <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
             {/* Жанр */}
-            <FilterGroup icon={Star} label="Жанр">
+            <FilterGroup icon={Star} label={t("filters.genre")}>
               <Select value={filters.genre} onValueChange={(v) => update({ genre: v })}>
                 <SelectTrigger className="h-9 w-full rounded-lg border-white/10 bg-background/60 text-sm">
                   <SelectValue />
@@ -154,7 +156,7 @@ export function FilterPanel({
             </FilterGroup>
 
             {/* Страна */}
-            <FilterGroup icon={Globe2} label="Страна">
+            <FilterGroup icon={Globe2} label={t("filters.country")}>
               <Select value={filters.country} onValueChange={(v) => update({ country: v })}>
                 <SelectTrigger className="h-9 w-full rounded-lg border-white/10 bg-background/60 text-sm">
                   <SelectValue />
@@ -170,7 +172,7 @@ export function FilterPanel({
             </FilterGroup>
 
             {/* Год: диапазон */}
-            <FilterGroup icon={Calendar} label={`Год: ${filters.yearFrom} — ${filters.yearTo}`}>
+            <FilterGroup icon={Calendar} label={`${t("filters.year")}: ${filters.yearFrom} — ${filters.yearTo}`}>
               <div className="px-2 pt-3">
                 <Slider
                   value={[filters.yearFrom, filters.yearTo]}
@@ -190,7 +192,7 @@ export function FilterPanel({
             {/* Рейтинг: диапазон */}
             <FilterGroup
               icon={Star}
-              label={`Рейтинг: ${filters.ratingFrom.toFixed(1)} — ${filters.ratingTo.toFixed(1)}`}
+              label={`${t("filters.rating")}: ${filters.ratingFrom.toFixed(1)} — ${filters.ratingTo.toFixed(1)}`}
             >
               <div className="px-2 pt-3">
                 <Slider

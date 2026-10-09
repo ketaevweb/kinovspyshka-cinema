@@ -542,3 +542,18 @@ Stage Summary:
 - i18n RU/EN: инфраструктура + переключатель + полные словари.
 - Telegram: мини-сервис (long polling) + serverless webhook + Share menu.
 - Postgres: миграция готова, инструкция для подключения.
+
+---
+Task ID: i18n-translate
+Agent: general-purpose
+Task: Translate components to i18n t() function
+
+Work Log:
+- Translated src/components/cinema/footer.tsx: nav links (nav.home/catalog/trending/new/search), tagline (footer.tagline), copyright line (footer.copyright), madeWith/forCinema hearts line.
+- Translated src/components/cinema/search-section.tsx: title/subtitle (search.title/subtitle), mode labels via modeLabelKey() helper (search.mode.id/name/torrent), placeholders via modePlaceholderKey() helper (search.placeholder.*), search button (search.button), suggestions loading text (search.loading), suggestion badge "Открыть" → movie.watch, example prefix (search.example), searching state (search.searching), nothing-found message (search.nothing), searchOnKp/onKp external link, found count (search.found). Refactored MODES constant from {id,label,placeholder,icon} to {id,icon} + key-mapping helpers since module-level constants cannot use the t() hook.
+- Translated src/components/cinema/home-client.tsx: section titles (section.history/favorites/recommendations/trending/new) + subtitles (section.historySub/recommendationsSub/trendingSub/newSub), catalog title (catalog.title), catalog "в коллекции" (catalog.moviesInCollection), favorites count in catalog header (catalog.favorites), favorites subtitle using pluralize(favorites.size, t("section.favoritesSub"), lang), catalog count word using pluralize(filteredMovies.length, t("section.favoritesSub"), lang) replacing the local pluralMovies() helper (removed). load.shown / load.of for pagination line.
+- Translated src/components/cinema/movie-card.tsx: aria-labels — watch (movie.watch + movie.title), info (movie.info + movie.title), favorites (movie.favorites), compare (movie.compare).
+- Translated src/components/cinema/filter-panel.tsx: filters.title, filters.reset, filters.found, filters.advanced, filters.genre, filters.country, filters.year (+ ": ..."), filters.rating (+ ": ..."), sort options refactored to {value,labelKey} with t(opt.labelKey) for sort.ratingDesc/ratingAsc/yearDesc/yearAsc/viewsDesc/titleAsc.
+
+Stage Summary:
+- All 5 components now use the useI18n() hook and t() function for hardcoded Russian text. The local pluralMovies() helper in home-client.tsx was removed in favour of the shared pluralize() helper imported from @/lib/i18n. Module-level constants (MODES in search-section, SORT_OPTIONS in filter-panel) were refactored to hold i18n key references instead of localized strings, since hooks can only be called inside components. Lint passes cleanly (eslint . → 0 errors). The only TypeScript error in search-section.tsx (HTMLDivElement ref on <form>) is pre-existing (verified by stashing changes) and unrelated to the i18n work.

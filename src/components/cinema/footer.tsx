@@ -1,8 +1,11 @@
 "use client";
 
 import { Film, Send, Github, Heart } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 export function Footer() {
+  const { t } = useI18n();
+
   return (
     <footer className="mt-auto border-t border-white/5 bg-card/40">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -17,17 +20,16 @@ export function Footer() {
               </span>
             </div>
             <p className="mt-2 max-w-sm text-xs text-muted-foreground">
-              Онлайн-кинотеатр с большой коллекцией фильмов и сериалов в HD.
-              Смотрите трейлеры, ищите по названию или ID Кинопоиска.
+              {t("footer.tagline")}
             </p>
           </div>
 
           <nav className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
-            <a href="#hero" className="transition hover:text-foreground">Главная</a>
-            <a href="#catalog" className="transition hover:text-foreground">Каталог</a>
-            <a href="#trending" className="transition hover:text-foreground">В тренде</a>
-            <a href="#new" className="transition hover:text-foreground">Новинки</a>
-            <a href="#search" className="transition hover:text-foreground">Поиск</a>
+            <a href="#hero" className="transition hover:text-foreground">{t("nav.home")}</a>
+            <a href="#catalog" className="transition hover:text-foreground">{t("nav.catalog")}</a>
+            <a href="#trending" className="transition hover:text-foreground">{t("nav.trending")}</a>
+            <a href="#new" className="transition hover:text-foreground">{t("nav.new")}</a>
+            <a href="#search" className="transition hover:text-foreground">{t("nav.search")}</a>
           </nav>
 
           <div className="flex items-center gap-3">
@@ -51,9 +53,9 @@ export function Footer() {
         </div>
 
         <div className="mt-6 flex flex-col items-center justify-between gap-2 border-t border-white/5 pt-5 text-xs text-muted-foreground sm:flex-row">
-          <p>© {new Date().getFullYear()} КиноВспышка. Все права защищены.</p>
+          <p>© {new Date().getFullYear()} {t("footer.copyright")}</p>
           <p className="flex items-center gap-1.5">
-            Сделано с <Heart className="h-3.5 w-3.5 fill-cinema text-cinema" /> для любителей кино
+            {t("footer.madeWith")} <Heart className="h-3.5 w-3.5 fill-cinema text-cinema" /> {t("footer.forCinema")}
           </p>
         </div>
       </div>

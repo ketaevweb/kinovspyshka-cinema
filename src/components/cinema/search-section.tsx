@@ -6,16 +6,29 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useDebounce } from "@/hooks/use-debounce";
+import { useI18n } from "@/lib/i18n";
 import type { Movie } from "@/lib/types";
 import { MoviePoster } from "./movie-poster";
 
 type SearchMode = "id" | "name" | "torrent";
 
-const MODES: { id: SearchMode; label: string; placeholder: string; icon: typeof Hash }[] = [
-  { id: "id", label: "По ID Кинопоиска", placeholder: "Введите ID, например 447301", icon: Hash },
-  { id: "name", label: "По названию", placeholder: "Название фильма или сериала...", icon: FileText },
-  { id: "torrent", label: "По торрентам", placeholder: "Название для поиска торрентов...", icon: Download },
+const MODES: { id: SearchMode; icon: typeof Hash }[] = [
+  { id: "id", icon: Hash },
+  { id: "name", icon: FileText },
+  { id: "torrent", icon: Download },
 ];
+
+function modeLabelKey(id: SearchMode): string {
+  if (id === "id") return "search.mode.id";
+  if (id === "name") return "search.mode.name";
+  return "search.mode.torrent";
+}
+
+function modePlaceholderKey(id: SearchMode): string {
+  if (id === "id") return "search.placeholder.id";
+  if (id === "name") return "search.placeholder.name";
+  return "search.placeholder.torrent";
+}
 
 interface SearchSectionProps {
   mode: SearchMode;
@@ -38,6 +51,7 @@ export function SearchSection({
   loading,
   onPlay,
 }: SearchSectionProps) {
+  const { t } = useI18n();
   const [focused, setFocused] = useState(false);
   const [suggestions, setSuggestions] = useState<Movie[]>([]);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
@@ -116,10 +130,10 @@ export function SearchSection({
       <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
         <div className="text-center">
           <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
-            Найдите фильм за секунду
+            {t("search.title")}
           </h2>
           <p className="mx-auto mt-2 max-w-2xl text-sm text-muted-foreground sm:text-base">
-            Ищите по ID Кинопоиска, по названию или по торрентам — как в старом добром онлайн-кинотеатре.
+            {t("search.subtitle")}
           </p>
         </div>
 
@@ -139,7 +153,7 @@ export function SearchSection({
                 )}
               >
                 <Icon className="h-4 w-4" />
-                {m.label}
+                {t(modeLabelKey(m.id))}
               </button>
             );
           })}
@@ -154,7 +168,7 @@ export function SearchSection({
               onChange={(e) => setQuery(e.target.value)}
               onFocus={() => setFocused(true)}
               onKeyDown={onKeyDown}
-              placeholder={MODES.find((m) => m.id === mode)?.placeholder}
+              placeholder={t(modePlaceholderKey(mode))}
               inputMode={mode === "id" ? "numeric" : "text"}
               type={mode === "id" ? "number" : "search"}
               autoComplete="off"
@@ -167,7 +181,7 @@ export function SearchSection({
               type="submit"
               className="absolute right-2 top-1/2 z-10 h-10 -translate-y-1/2 gap-1 rounded-full bg-cinema px-5 text-white hover:bg-cinema/90"
             >
-              Искать
+              {t("search.button")}
               <ArrowRight className="h-4 w-4" />
             </Button>
 
@@ -177,7 +191,7 @@ export function SearchSection({
                 {showSuggestionsLoading && (
                   <div className="flex items-center justify-center gap-2 px-4 py-6 text-sm text-muted-foreground">
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Поиск…
+                    {t("search.loading")}
                   </div>
                 )}
                 {showSuggestions &&
@@ -205,7 +219,7 @@ export function SearchSection({
                         </p>
                       </div>
                       <span className="shrink-0 rounded bg-cinema/10 px-2 py-0.5 text-[10px] font-medium text-cinema">
-                        Открыть
+                        {t("movie.watch")}
                       </span>
                     </button>
                   ))}
@@ -215,7 +229,7 @@ export function SearchSection({
 
           {mode === "id" && (
             <p className="mt-3 text-center text-xs text-muted-foreground">
-              Пример:{" "}
+              {t("search.example")}:{" "}
               <button
                 type="button"
                 onClick={() => {
@@ -235,7 +249,7 @@ export function SearchSection({
         {loading && (
           <div className="mt-6 flex items-center justify-center gap-2 text-sm text-muted-foreground">
             <span className="h-4 w-4 animate-spin rounded-full border-2 border-cinema border-t-transparent" />
-            Идёт поиск...
+            {t("search.searching")}
           </div>
         )}
 
@@ -244,7 +258,7 @@ export function SearchSection({
             {results.length === 0 ? (
               <div className="mx-auto max-w-md text-center">
                 <p className="text-sm text-muted-foreground">
-                  По запросу «{query}» ничего не найдено в нашем каталоге.
+                  {`«${query}» — ${t("search.nothing")}.`}
                 </p>
                 <a
                   href={`https://fzz-0ejfn0o.troutcdn.site/searchname.php?name=${encodeURIComponent(
@@ -255,13 +269,14 @@ export function SearchSection({
                   className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-cinema px-4 py-2 text-sm font-medium text-white transition hover:bg-cinema/90"
                 >
                   <ExternalLink className="h-4 w-4" />
-                  Искать «{query.trim()}» на kinopoisk.ws
+                  {t("search.searchOnKp")} «{query.trim()}» {t("search.onKp")}
                 </a>
               </div>
             ) : (
               <>
                 <p className="mb-3 text-sm text-muted-foreground">
-                  Найдено: <span className="font-semibold text-foreground">{results.length}</span>
+                  {t("search.found")}:{" "}
+                  <span className="font-semibold text-foreground">{results.length}</span>
                 </p>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                   {results.map((m) => (

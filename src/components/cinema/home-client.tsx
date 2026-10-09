@@ -6,6 +6,7 @@ import { HeroCarousel } from "@/components/cinema/hero-carousel";
 import { SearchSection } from "@/components/cinema/search-section";
 import { MovieRow } from "@/components/cinema/movie-row";
 import { MovieGrid } from "@/components/cinema/movie-grid";
+import { VirtualMovieGrid } from "@/components/cinema/virtual-movie-grid";
 import { FilterPanel, type FilterState } from "@/components/cinema/filter-panel";
 import { MovieModal } from "@/components/cinema/movie-modal";
 import { CompareDialog } from "@/components/cinema/compare-dialog";
@@ -16,6 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 import { useFavorites } from "@/hooks/use-favorites";
 import { useWatchHistory } from "@/hooks/use-watch-history";
+import { useI18n, pluralize } from "@/lib/i18n";
 import type { Movie, Genre } from "@/lib/types";
 
 type SearchMode = "id" | "name" | "torrent";
@@ -34,6 +36,7 @@ interface HomeClientProps {
 }
 
 export function HomeClient({ initialData }: HomeClientProps) {
+  const { t, lang } = useI18n();
   const [featured, setFeatured] = useState<Movie[]>(initialData.featured);
   const [trending, setTrending] = useState<Movie[]>(initialData.trending);
   const [newReleases, setNewReleases] = useState<Movie[]>([]);
@@ -248,8 +251,8 @@ export function HomeClient({ initialData }: HomeClientProps) {
         {!loadingData && history.length > 0 && (
           <MovieRow
             id="history"
-            title="Вы смотрели"
-            subtitle={`Недавно открытые фильмы — ${history.length}`}
+            title={t("section.history")}
+            subtitle={`${t("section.historySub")} — ${history.length}`}
             movies={history.map((h) => allMovies.find((m) => m.id === h.id)).filter(Boolean) as Movie[]}
             onPlay={openMovie}
             onInfo={openMovie}
@@ -260,8 +263,8 @@ export function HomeClient({ initialData }: HomeClientProps) {
         {!loadingData && favorites.size > 0 && (
           <MovieRow
             id="favorites"
-            title="Ваше избранное"
-            subtitle={`${favorites.size} ${favorites.size === 1 ? "фильм" : favorites.size < 5 ? "фильма" : "фильмов"} в подборке`}
+            title={t("section.favorites")}
+            subtitle={`${favorites.size} ${pluralize(favorites.size, t("section.favoritesSub"), lang)} в подборке`}
             movies={allMovies.filter((m) => favorites.has(m.id))}
             onPlay={openMovie}
             onInfo={openMovie}
@@ -272,8 +275,8 @@ export function HomeClient({ initialData }: HomeClientProps) {
         {!loadingData && recommendations.length > 0 && (
           <MovieRow
             id="recommendations"
-            title="Рекомендации для вас"
-            subtitle="Похожие на ваши избранные фильмы по жанрам"
+            title={t("section.recommendations")}
+            subtitle={t("section.recommendationsSub")}
             movies={recommendations}
             onPlay={openMovie}
             onInfo={openMovie}
@@ -286,8 +289,8 @@ export function HomeClient({ initialData }: HomeClientProps) {
         ) : (
           <MovieRow
             id="trending"
-            title="В тренде сейчас"
-            subtitle="Самые просматриваемые фильмы недели"
+            title={t("section.trending")}
+            subtitle={t("section.trendingSub")}
             movies={trending}
             onPlay={openMovie}
             onInfo={openMovie}
@@ -316,14 +319,14 @@ export function HomeClient({ initialData }: HomeClientProps) {
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <h2 className="text-xl font-bold tracking-tight sm:text-2xl">Каталог</h2>
+                <h2 className="text-xl font-bold tracking-tight sm:text-2xl">{t("catalog.title")}</h2>
                 <p className="mt-0.5 text-sm text-muted-foreground">
-                  <span className="font-semibold text-foreground">{filteredMovies.length}</span> {pluralMovies(filteredMovies.length)} в коллекции
+                  <span className="font-semibold text-foreground">{filteredMovies.length}</span> {pluralize(filteredMovies.length, t("section.favoritesSub"), lang)} {t("catalog.moviesInCollection")}
                 </p>
               </div>
               {favorites.size > 0 && (
                 <div className="text-xs text-muted-foreground">
-                  Избранное: <span className="font-semibold text-cinema">{favorites.size}</span>
+                  {t("catalog.favorites")}: <span className="font-semibold text-cinema">{favorites.size}</span>
                 </div>
               )}
             </div>
@@ -341,7 +344,7 @@ export function HomeClient({ initialData }: HomeClientProps) {
             {loadingData ? (
               <GridSkeleton />
             ) : (
-              <MovieGrid
+              <VirtualMovieGrid
                 movies={filteredMovies}
                 onPlay={openMovie}
                 onInfo={openMovie}
@@ -367,7 +370,7 @@ export function HomeClient({ initialData }: HomeClientProps) {
                 </div>
               )}
               <p className="text-xs text-muted-foreground">
-                Показано {Math.min(catalogVisible, filteredMovies.length)} из {filteredMovies.length}
+                {t("load.shown")} {Math.min(catalogVisible, filteredMovies.length)} {t("load.of")} {filteredMovies.length}
               </p>
               {/* Sentinel — наблюдатель IntersectionObserver срабатывает при попадании в viewport */}
               <div ref={sentinelRef} className="h-4 w-full" aria-hidden />
@@ -381,8 +384,8 @@ export function HomeClient({ initialData }: HomeClientProps) {
         ) : (
           <MovieRow
             id="new"
-            title="Новинки"
-            subtitle="Свежие премьеры в каталоге"
+            title={t("section.new")}
+            subtitle={t("section.newSub")}
             movies={newReleases}
             onPlay={openMovie}
             onInfo={openMovie}
@@ -427,14 +430,6 @@ export function HomeClient({ initialData }: HomeClientProps) {
       />
     </div>
   );
-}
-
-function pluralMovies(n: number): string {
-  const mod10 = n % 10;
-  const mod100 = n % 100;
-  if (mod10 === 1 && mod100 !== 11) return "фильм";
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return "фильма";
-  return "фильмов";
 }
 
 function RowSkeleton() {
