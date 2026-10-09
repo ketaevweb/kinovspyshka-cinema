@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useDebounce } from "@/hooks/use-debounce";
+import { useRecentSearches } from "@/hooks/use-recent-searches";
 import { useI18n } from "@/lib/i18n";
 import type { Movie } from "@/lib/types";
 import { MoviePoster } from "./movie-poster";
@@ -53,6 +54,7 @@ export function SearchSection({
 }: SearchSectionProps) {
   const { t } = useI18n();
   const [focused, setFocused] = useState(false);
+  const { recent, addSearch, clearRecent } = useRecentSearches();
   const [suggestions, setSuggestions] = useState<Movie[]>([]);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -99,6 +101,7 @@ export function SearchSection({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSearch(mode, query);
+    addSearch(query);
     setFocused(false);
   };
 
@@ -242,6 +245,31 @@ export function SearchSection({
               </button>{" "}
               — фильм «Начало»
             </p>
+          )}
+
+          {/* Недавние поиски (quick-access чипы) */}
+          {mode === "name" && focused && !query && recent.length > 0 && (
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+              <span className="text-xs text-muted-foreground">Недавние:</span>
+              {recent.slice(0, 6).map((s) => (
+                <button
+                  key={s}
+                  onClick={() => {
+                    setQuery(s);
+                    onSearch("name", s);
+                  }}
+                  className="rounded-full border border-white/10 bg-card/60 px-3 py-1 text-xs text-foreground/80 transition hover:border-cinema hover:text-cinema"
+                >
+                  {s}
+                </button>
+              ))}
+              <button
+                onClick={clearRecent}
+                className="text-xs text-muted-foreground/50 transition hover:text-destructive"
+              >
+                Очистить
+              </button>
+            </div>
           )}
         </form>
 

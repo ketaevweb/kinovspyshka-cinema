@@ -166,5 +166,35 @@ export function useFavorites() {
     [favorites]
   );
 
-  return { favorites, toggleFavorite, isFavorite, loaded, authenticated };
+  // Экспорт избранного в JSON
+  const exportFavorites = useCallback(() => {
+    const data = JSON.stringify([...favorites], null, 2);
+    const blob = new Blob([data], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `kinovspyshka-favorites-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [favorites]);
+
+  // Импорт избранного из JSON
+  const importFavorites = useCallback((json: string) => {
+    try {
+      const ids = JSON.parse(json) as string[];
+      if (!Array.isArray(ids)) return false;
+      const validIds = new Set(ids.filter((id) => typeof id === "string" && id.startsWith("kp-")));
+      setFavorites(validIds);
+      try {
+        localStorage.setItem("cinema:favorites", JSON.stringify([...validIds]));
+      } catch {
+        /* ignore */
+      }
+      return true;
+    } catch {
+      return false;
+    }
+  }, []);
+
+  return { favorites, toggleFavorite, isFavorite, loaded, authenticated, exportFavorites, importFavorites };
 }

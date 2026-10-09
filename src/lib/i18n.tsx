@@ -74,6 +74,8 @@ const ru: Dict = {
   "movie.compare": "В сравнение",
   "movie.share": "Поделиться",
   "movie.trailer": "Трейлер",
+  "movie.watchTrailer": "Смотреть трейлер",
+  "movie.hideTrailer": "Скрыть трейлер",
   "movie.similar": "Похожие фильмы",
   "movie.director": "Режиссёр",
   "movie.countries": "Страны",
@@ -140,6 +142,87 @@ const ru: Dict = {
   "footer.madeWith": "Сделано с",
   "footer.forCinema": "для любителей кино",
   "footer.copyright": "КиноВспышка. Все права защищены.",
+
+  // Compare table columns
+  "compare.col.title": "Название",
+  "compare.col.year": "Год",
+  "compare.col.rating": "Рейтинг",
+  "compare.col.duration": "Длительность",
+  "compare.col.genres": "Жанры",
+  "compare.col.countries": "Страны",
+  "compare.col.director": "Режиссёр",
+  "compare.col.age": "Возраст",
+  "compare.col.views": "Просмотры",
+  "compare.col.action": "Действие",
+  "compare.searchPlaceholder": "Поиск фильма для сравнения...",
+  "compare.remove": "Убрать",
+
+  // Person
+  "person.director": "Режиссёр",
+  "person.actor": "Актёр",
+  "person.filmography": "Фильмография",
+  "person.noMovies": "Фильмы с участием {name} не найдены в каталоге.",
+
+  // Auth (additional)
+  "auth.passwordTooShort": "Пароль должен быть не менее 6 символов",
+  "auth.registerError": "Ошибка регистрации",
+  "auth.networkError": "Ошибка сети",
+
+  // Review
+  "review.title": "Отзывы и оценки",
+  "review.yourRating": "Ваша оценка",
+  "review.placeholder": "Напишите отзыв (мин. 10 символов)...",
+  "review.loginToReview": "Войдите, чтобы оставить отзыв и оценку",
+  "review.publish": "Опубликовать",
+  "review.usersRating": "Оценка пользователей",
+  "review.noReviews": "Пока нет отзывов. Будьте первым!",
+  "review.loginRequired": "Войдите, чтобы оставить отзыв",
+  "review.ratingRequired": "Поставьте оценку",
+  "review.tooShort": "Отзыв должен быть не менее 10 символов",
+  "review.published": "Отзыв опубликован!",
+  "review.reviewSingular": "отзыв",
+  "review.reviewPlural": "отзывов",
+  "review.kinopoisk": "Кинопоиск",
+
+  // Command palette
+  "cmd.searchPlaceholder": "Поиск фильма или команда...",
+  "cmd.nothingFound": "Ничего не найдено. Попробуйте другой запрос.",
+  "cmd.movies": "Фильмы",
+  "cmd.navigation": "Навигация",
+  "cmd.actions": "Действия",
+  "cmd.compare": "Сравнить фильмы",
+  "cmd.hints": "Подсказки",
+  "cmd.hintText": "Нажмите ⌘K для открытия · Введите название для поиска · Стрелки для навигации",
+
+  // Empty state
+  "empty.favorites.title": "Пока нет избранного",
+  "empty.favorites.description": "Добавляйте фильмы в избранное кнопкой ♥ — они появятся здесь",
+  "empty.favorites.action": "Смотреть каталог",
+  "empty.history.title": "История пуста",
+  "empty.history.description": "Открывайте фильмы — они появятся в этой секции",
+  "empty.history.action": "Начать просмотр",
+  "empty.search.title": "Ничего не найдено",
+  "empty.search.description": "Попробуйте изменить запрос или фильтры",
+  "empty.search.action": "Сбросить фильтры",
+
+  // Player panel
+  "player.watchAria": "Смотреть «{title}» онлайн",
+  "player.subtitle": "«{title}» · kinopoisk.ws · ID {kinopoiskId}",
+
+  // CmdK hint
+  "cmdk.quickSearch": "Быстрый поиск",
+  "cmdk.openLabel": "Открыть командную палитру (⌘K)",
+
+  // Watchlist
+  "watchlist.ariaLabel": "В список",
+  "watchlist.addTo": "Добавить в список",
+  "watchlist.empty": "У вас пока нет списков",
+  "watchlist.create": "Создать список",
+  "watchlist.namePlaceholder": "Название списка",
+  "watchlist.removed": "Удалено из списка",
+  "watchlist.added": "Добавлено в список",
+  "watchlist.addedTo": "Добавлено в «{name}»",
+  "watchlist.error": "Ошибка",
 
   // Misc
   "lang.ru": "RU",
@@ -209,6 +292,8 @@ const en: Dict = {
   "movie.compare": "Add to compare",
   "movie.share": "Share",
   "movie.trailer": "Trailer",
+  "movie.watchTrailer": "Watch trailer",
+  "movie.hideTrailer": "Hide trailer",
   "movie.similar": "Similar movies",
   "movie.director": "Director",
   "movie.countries": "Countries",
@@ -270,6 +355,87 @@ const en: Dict = {
   "footer.madeWith": "Made with",
   "footer.forCinema": "for movie lovers",
   "footer.copyright": "KinoVspyshka. All rights reserved.",
+
+  // Compare table columns
+  "compare.col.title": "Title",
+  "compare.col.year": "Year",
+  "compare.col.rating": "Rating",
+  "compare.col.duration": "Duration",
+  "compare.col.genres": "Genres",
+  "compare.col.countries": "Countries",
+  "compare.col.director": "Director",
+  "compare.col.age": "Age",
+  "compare.col.views": "Views",
+  "compare.col.action": "Action",
+  "compare.searchPlaceholder": "Search movie to compare...",
+  "compare.remove": "Remove",
+
+  // Person
+  "person.director": "Director",
+  "person.actor": "Actor",
+  "person.filmography": "Filmography",
+  "person.noMovies": "Movies featuring {name} not found in the catalog.",
+
+  // Auth (additional)
+  "auth.passwordTooShort": "Password must be at least 6 characters",
+  "auth.registerError": "Registration error",
+  "auth.networkError": "Network error",
+
+  // Review
+  "review.title": "Reviews and ratings",
+  "review.yourRating": "Your rating",
+  "review.placeholder": "Write a review (min. 10 chars)...",
+  "review.loginToReview": "Sign in to leave a review and rating",
+  "review.publish": "Publish",
+  "review.usersRating": "Users rating",
+  "review.noReviews": "No reviews yet. Be the first!",
+  "review.loginRequired": "Sign in to leave a review",
+  "review.ratingRequired": "Please rate",
+  "review.tooShort": "Review must be at least 10 characters",
+  "review.published": "Review published!",
+  "review.reviewSingular": "review",
+  "review.reviewPlural": "reviews",
+  "review.kinopoisk": "Kinopoisk",
+
+  // Command palette
+  "cmd.searchPlaceholder": "Search movie or command...",
+  "cmd.nothingFound": "Nothing found. Try a different query.",
+  "cmd.movies": "Movies",
+  "cmd.navigation": "Navigation",
+  "cmd.actions": "Actions",
+  "cmd.compare": "Compare movies",
+  "cmd.hints": "Hints",
+  "cmd.hintText": "Press ⌘K to open · Type to search · Arrow keys to navigate",
+
+  // Empty state
+  "empty.favorites.title": "No favorites yet",
+  "empty.favorites.description": "Add movies to favorites with the ♥ button — they will appear here",
+  "empty.favorites.action": "Browse catalog",
+  "empty.history.title": "History is empty",
+  "empty.history.description": "Open movies — they will appear in this section",
+  "empty.history.action": "Start watching",
+  "empty.search.title": "Nothing found",
+  "empty.search.description": "Try changing your query or filters",
+  "empty.search.action": "Reset filters",
+
+  // Player panel
+  "player.watchAria": "Watch \"{title}\" online",
+  "player.subtitle": "\"{title}\" · kinopoisk.ws · ID {kinopoiskId}",
+
+  // CmdK hint
+  "cmdk.quickSearch": "Quick search",
+  "cmdk.openLabel": "Open command palette (⌘K)",
+
+  // Watchlist
+  "watchlist.ariaLabel": "To list",
+  "watchlist.addTo": "Add to list",
+  "watchlist.empty": "You have no lists yet",
+  "watchlist.create": "Create list",
+  "watchlist.namePlaceholder": "List name",
+  "watchlist.removed": "Removed from list",
+  "watchlist.added": "Added to list",
+  "watchlist.addedTo": "Added to \"{name}\"",
+  "watchlist.error": "Error",
 
   "lang.ru": "RU",
   "lang.en": "EN",

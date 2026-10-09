@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
 import { getTop250Rank } from "@/lib/extended-data";
 import { MoviePoster } from "./movie-poster";
+import { WatchlistButton } from "./watchlist-button";
 
 interface MovieCardProps {
   movie: Movie;
@@ -106,6 +107,7 @@ export function MovieCard({ movie, onPlay, onInfo, onCompare, inCompare, variant
                 <GitCompare className="h-4 w-4" />
               </button>
             )}
+            <WatchlistButton movie={movie} />
           </div>
         </div>
       </div>

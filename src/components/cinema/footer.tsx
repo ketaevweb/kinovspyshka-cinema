@@ -2,8 +2,9 @@
 
 import { Film, Send, Github, Heart } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+import { SupportButton } from "./support-button";
 
-export function Footer() {
+export function Footer({ favoritesCount = 0, onExportFavorites }: { favoritesCount?: number; onExportFavorites?: () => void }) {
   const { t } = useI18n();
 
   return (
@@ -34,7 +35,7 @@ export function Footer() {
 
           <div className="flex items-center gap-3">
             <a
-              href="https://t.me/share/url?url=https://kinovspyshka-cinema.vercel.app"
+              href="https://t.me/share/url?url=https://kino.kataevweb.ru"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Telegram"
@@ -50,6 +51,19 @@ export function Footer() {
               <Github className="h-4 w-4" />
             </a>
           </div>
+        </div>
+
+        {/* Поддержать проект + экспорт избранного */}
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+          <SupportButton />
+          {favoritesCount > 0 && (
+            <button
+              onClick={onExportFavorites}
+              className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-card/40 px-3 py-1.5 text-xs text-muted-foreground transition hover:border-cinema hover:text-cinema"
+            >
+              📥 Экспорт избранного
+            </button>
+          )}
         </div>
 
         <div className="mt-6 flex flex-col items-center justify-between gap-2 border-t border-white/5 pt-5 text-xs text-muted-foreground sm:flex-row">

@@ -9,7 +9,7 @@ import { Bot } from "grammy";
  */
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || "";
-const SITE_URL = process.env.NEXTAUTH_URL || "https://kinovspyshka-cinema.vercel.app";
+const SITE_URL = process.env.NEXTAUTH_URL || "https://kino.kataevweb.ru";
 
 export const dynamic = "force-dynamic";
 

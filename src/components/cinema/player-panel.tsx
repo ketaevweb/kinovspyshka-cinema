@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { Play, ExternalLink, Search, Film, ShieldOff, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n";
 
 interface PlayerPanelProps {
   /** ID Кинопоиска */
@@ -37,6 +38,7 @@ export function PlayerPanel({
   posterUrl,
   className,
 }: PlayerPanelProps) {
+  const { t } = useI18n();
   const [imgError, setImgError] = useState(false);
   const watchUrl = `https://fzz-0ejfn0o.troutcdn.site/${kinopoiskId}`;
   const searchUrl = `https://fzz-0ejfn0o.troutcdn.site/searchname.php?name=${encodeURIComponent(
@@ -81,17 +83,17 @@ export function PlayerPanel({
         <button
           onClick={openWatch}
           className="group flex h-20 w-20 items-center justify-center rounded-full bg-cinema/95 text-white shadow-[0_0_40px_oklch(0.605_0.234_27.4/0.6)] transition hover:scale-110 hover:bg-cinema"
-          aria-label={`Смотреть «${title}» онлайн`}
+          aria-label={t("player.watchAria", { title })}
         >
           <Play className="h-9 w-9 translate-x-0.5 fill-white" />
         </button>
 
         <div>
           <h3 className="text-lg font-bold text-white sm:text-2xl">
-            Смотреть онлайн в HD
+            {t("movie.watchInHD")}
           </h3>
           <p className="mt-1 text-sm text-white/70">
-            «{title}» · kinopoisk.ws · ID {kinopoiskId}
+            {t("player.subtitle", { title, kinopoiskId })}
           </p>
         </div>
 
@@ -101,7 +103,7 @@ export function PlayerPanel({
           className="inline-flex items-center gap-2 rounded-full bg-cinema px-6 py-3 text-sm font-semibold text-white transition hover:bg-cinema/90"
         >
           <ExternalLink className="h-4 w-4" />
-          Открыть плеер в новом окне
+          {t("movie.openPlayer")}
         </button>
 
         {/* Вторичная: поиск по названию */}
@@ -112,16 +114,14 @@ export function PlayerPanel({
           className="inline-flex items-center gap-1.5 text-xs text-white/60 transition hover:text-cinema"
         >
           <Search className="h-3.5 w-3.5" />
-          Или искать по названию на kinopoisk.ws
+          {t("movie.searchByName")}
         </a>
 
         {/* Объяснение блокировки */}
         <div className="mt-1 flex max-w-md items-start gap-2 rounded-lg border border-white/10 bg-black/40 p-2.5 text-left text-[11px] text-white/55 backdrop-blur">
           <ShieldOff className="mt-0.5 h-3.5 w-3.5 shrink-0 text-cinema" />
           <span>
-            Встроенный плеер видеохостинга блокирует встраивание на сторонних
-            доменах, поэтому фильм открывается в новой вкладке kinopoisk.ws —
-            там видео воспроизводится без ограничений.
+            {t("movie.blockedNotice")}
           </span>
         </div>
       </div>
@@ -129,12 +129,12 @@ export function PlayerPanel({
       {/* Бейдж источника */}
       <div className="pointer-events-none absolute bottom-2 right-2 z-10 flex items-center gap-1 rounded bg-black/60 px-2 py-0.5 text-[10px] font-medium text-white/70 backdrop-blur">
         <Film className="h-3 w-3" />
-        kinopoisk.ws
+        {t("movie.sourceKp")}
       </div>
 
       <div className="pointer-events-none absolute left-2 top-2 z-10 flex items-center gap-1 rounded bg-black/60 px-2 py-0.5 text-[10px] font-medium text-white/70 backdrop-blur">
         <Info className="h-3 w-3" />
-        Внешний источник
+        {t("movie.externalSource")}
       </div>
     </div>
   );

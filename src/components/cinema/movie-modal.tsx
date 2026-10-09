@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { PlayerPanel } from "./player-panel";
 import { MovieCard } from "./movie-card";
+import { ReviewSection } from "./review-section";
+import { WatchOnLinks } from "./watch-on-links";
+import { useI18n } from "@/lib/i18n";
 import {
   Star,
   Clock,
@@ -29,9 +33,11 @@ import {
   Copy,
   Trophy,
   Lightbulb,
+  Play,
 } from "lucide-react";
 import { toast } from "sonner";
 import { getExtendedData } from "@/lib/extended-data";
+import { findPersonByName, type Person } from "@/lib/persons";
 import type { Movie } from "@/lib/types";
 
 interface MovieModalProps {
@@ -42,6 +48,7 @@ interface MovieModalProps {
   onPlay: (movie: Movie) => void;
   onAddToFavorites?: (movie: Movie) => void;
   favoriteIds?: Set<string>;
+  onPersonClick?: (person: Person) => void;
 }
 
 export function MovieModal({
@@ -52,7 +59,11 @@ export function MovieModal({
   onPlay,
   onAddToFavorites,
   favoriteIds,
+  onPersonClick,
 }: MovieModalProps) {
+  const [showTrailer, setShowTrailer] = useState(false);
+  const { t } = useI18n();
+
   if (!movie) return null;
 
   const isFav = favoriteIds?.has(movie.id) ?? false;
@@ -124,7 +135,26 @@ export function MovieModal({
 
                   {/* Детали */}
                   <dl className="mt-5 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
-                    <Detail icon={Film} label="Режиссёр" value={movie.director} />
+                    <dt className="col-span-1 flex items-start gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      <Film className="mt-0.5 h-3.5 w-3.5" />
+                      Режиссёр
+                    </dt>
+                    <dd className="col-span-1 mt-0.5 text-sm text-foreground/90">
+                      {(() => {
+                        const person = findPersonByName(movie.director);
+                        if (person && onPersonClick) {
+                          return (
+                            <button
+                              onClick={() => onPersonClick(person)}
+                              className="text-cinema underline-offset-2 hover:underline"
+                            >
+                              {movie.director}
+                            </button>
+                          );
+                        }
+                        return movie.director;
+                      })()}
+                    </dd>
                     <Detail icon={Globe} label="Страны" value={movie.countries.join(", ")} />
                     <Detail
                       icon={Users}
@@ -134,7 +164,7 @@ export function MovieModal({
                     />
                   </dl>
 
-                  {/* Визуальные чипы актёров */}
+                  {/* Визуальные чипы актёров (кликабельные) */}
                   {movie.cast.length > 0 && (
                     <div className="mt-4">
                       <p className="mb-2 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -142,31 +172,45 @@ export function MovieModal({
                         Актёрский состав
                       </p>
                       <div className="no-scrollbar flex gap-3 overflow-x-auto pb-2">
-                        {movie.cast.map((actor) => (
-                          <div
-                            key={actor}
-                            className="flex w-20 shrink-0 flex-col items-center gap-1.5"
-                          >
-                            <div className="flex h-16 w-16 items-center justify-center rounded-full border border-white/10 bg-gradient-to-br from-cinema/30 to-zinc-800 text-lg font-black text-white/80">
-                              {actor
-                                .split(" ")
-                                .slice(0, 2)
-                                .map((w) => w[0])
-                                .join("")
-                                .toUpperCase()}
-                            </div>
-                            <p className="line-clamp-2 text-center text-[11px] leading-tight text-foreground/80">
-                              {actor}
-                            </p>
-                          </div>
-                        ))}
+                        {movie.cast.map((actor) => {
+                          const person = findPersonByName(actor);
+                          return (
+                            <button
+                              key={actor}
+                              onClick={() => person && onPersonClick(person)}
+                              disabled={!person}
+                              className="flex w-20 shrink-0 flex-col items-center gap-1.5 transition hover:scale-105"
+                            >
+                              <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-gradient-to-br from-cinema/30 to-zinc-800 text-lg font-black text-white/80">
+                                {person?.photo ? (
+                                  <img
+                                    src={person.photo}
+                                    alt={actor}
+                                    className="h-full w-full object-cover"
+                                    referrerPolicy="no-referrer"
+                                  />
+                                ) : (
+                                  actor
+                                    .split(" ")
+                                    .slice(0, 2)
+                                    .map((w) => w[0])
+                                    .join("")
+                                    .toUpperCase()
+                                )}
+                              </div>
+                              <p className="line-clamp-2 text-center text-[11px] leading-tight text-foreground/80">
+                                {actor}
+                              </p>
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
                 </div>
 
                 {/* Боковые действия */}
-                <div className="flex shrink-0 flex-row gap-2 lg:flex-col lg:items-stretch">
+                <div className="flex shrink-0 flex-wrap gap-2 lg:flex-col lg:items-stretch">
                   {onAddToFavorites && (
                     <Button
                       variant="secondary"
@@ -175,11 +219,11 @@ export function MovieModal({
                     >
                       {isFav ? (
                         <>
-                          <Check className="h-4 w-4" /> В избранном
+                          <Check className="h-4 w-4" /> {t("movie.favorited")}
                         </>
                       ) : (
                         <>
-                          <Plus className="h-4 w-4" /> В избранное
+                          <Plus className="h-4 w-4" /> {t("movie.favorites")}
                         </>
                       )}
                     </Button>
@@ -193,11 +237,38 @@ export function MovieModal({
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      <Film className="h-4 w-4" /> Трейлер
+                      <Film className="h-4 w-4" /> {t("movie.trailer")}
                     </a>
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    className="gap-2"
+                    onClick={() => setShowTrailer((v) => !v)}
+                  >
+                    <Play className="h-4 w-4" /> {showTrailer ? t("movie.hideTrailer") : t("movie.watchTrailer")}
                   </Button>
                 </div>
               </div>
+
+              {/* Встроенный трейлер (YouTube) */}
+              {showTrailer && (
+                <div className="mt-4 overflow-hidden rounded-xl border border-white/10">
+                  <div className="relative aspect-video w-full bg-black">
+                    <iframe
+                      src={`https://www.youtube.com/embed?listType=search&list=${encodeURIComponent(
+                        `${movie.originalTitle} ${movie.year} официальный трейлер`
+                      )}`}
+                      className="h-full w-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      title={`Трейлер ${movie.title}`}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Партнёрские ссылки — смотреть на платформах */}
+              <WatchOnLinks movie={movie} />
 
               {/* Награды и факты */}
               {(() => {
@@ -269,6 +340,9 @@ export function MovieModal({
                 );
               })()}
 
+              {/* Отзывы и оценки */}
+              <ReviewSection movie={movie} />
+
               {/* Похожие фильмы */}
               {similar.length > 0 && (
                 <div className="mt-8">
@@ -319,7 +393,7 @@ function formatViews(n: number): string {
 }
 
 function ShareMenu({ movie }: { movie: Movie }) {
-  const siteUrl = typeof window !== "undefined" ? window.location.origin : "https://kinovspyshka-cinema.vercel.app";
+  const siteUrl = typeof window !== "undefined" ? window.location.origin : "https://kino.kataevweb.ru";
   const filmUrl = `${siteUrl}/?film=${movie.kinopoiskId}`;
   const shareText = `🎬 Смотрите «${movie.title}» (${movie.year}) на КиноВспышке!`;
 

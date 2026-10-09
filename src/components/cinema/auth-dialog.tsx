@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, LogIn, UserPlus, Film } from "lucide-react";
 import { toast } from "sonner";
+import { useI18n } from "@/lib/i18n";
 
 interface AuthDialogProps {
   open: boolean;
@@ -16,6 +17,7 @@ interface AuthDialogProps {
 }
 
 export function AuthDialog({ open, onOpenChange, onSuccess }: AuthDialogProps) {
+  const { t } = useI18n();
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -33,9 +35,9 @@ export function AuthDialog({ open, onOpenChange, onSuccess }: AuthDialogProps) {
     setLoading(false);
 
     if (res?.error) {
-      toast.error("Неверный email или пароль");
+      toast.error(t("auth.wrongCredentials"));
     } else {
-      toast.success("Добро пожаловать!");
+      toast.success(t("auth.welcome"));
       onOpenChange(false);
       onSuccess?.();
     }
@@ -49,7 +51,7 @@ export function AuthDialog({ open, onOpenChange, onSuccess }: AuthDialogProps) {
     const name = fd.get("name") as string;
 
     if (password.length < 6) {
-      toast.error("Пароль должен быть не менее 6 символов");
+      toast.error(t("auth.passwordTooShort"));
       return;
     }
 
@@ -63,18 +65,18 @@ export function AuthDialog({ open, onOpenChange, onSuccess }: AuthDialogProps) {
       const data = await regRes.json();
 
       if (!regRes.ok) {
-        toast.error(data.error || "Ошибка регистрации");
+        toast.error(data.error || t("auth.registerError"));
         setLoading(false);
         return;
       }
 
       // Автоматический вход после регистрации
       await signIn("credentials", { email, password, redirect: false });
-      toast.success("Аккаунт создан!");
+      toast.success(t("auth.accountCreated"));
       onOpenChange(false);
       onSuccess?.();
     } catch {
-      toast.error("Ошибка сети");
+      toast.error(t("auth.networkError"));
     }
     setLoading(false);
   };
@@ -84,35 +86,35 @@ export function AuthDialog({ open, onOpenChange, onSuccess }: AuthDialogProps) {
       <DialogContent className="max-w-md border-white/10 bg-card/95">
         <DialogTitle className="flex items-center gap-2 text-xl font-bold">
           <Film className="h-5 w-5 text-cinema" />
-          Войти в КиноВспышку
+          {t("auth.title")}
         </DialogTitle>
         <DialogDescription className="text-muted-foreground">
-          Синхронизируйте избранное между устройствами
+          {t("auth.subtitle")}
         </DialogDescription>
 
         <Tabs defaultValue="login" className="mt-2">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="login" className="gap-1.5">
-              <LogIn className="h-4 w-4" /> Вход
+              <LogIn className="h-4 w-4" /> {t("auth.login")}
             </TabsTrigger>
             <TabsTrigger value="register" className="gap-1.5">
-              <UserPlus className="h-4 w-4" /> Регистрация
+              <UserPlus className="h-4 w-4" /> {t("auth.register")}
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="login">
             <form onSubmit={handleLogin} className="mt-4 space-y-3">
               <div>
-                <label className="mb-1 block text-xs font-medium text-muted-foreground">Email</label>
+                <label className="mb-1 block text-xs font-medium text-muted-foreground">{t("auth.email")}</label>
                 <Input name="email" type="email" required placeholder="you@example.com" className="bg-background/60" />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-muted-foreground">Пароль</label>
+                <label className="mb-1 block text-xs font-medium text-muted-foreground">{t("auth.password")}</label>
                 <Input name="password" type="password" required placeholder="••••••" className="bg-background/60" />
               </div>
               <Button type="submit" disabled={loading} className="w-full gap-2 bg-cinema hover:bg-cinema/90">
                 {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-                Войти
+                {t("auth.signIn")}
               </Button>
             </form>
           </TabsContent>
@@ -120,20 +122,20 @@ export function AuthDialog({ open, onOpenChange, onSuccess }: AuthDialogProps) {
           <TabsContent value="register">
             <form onSubmit={handleRegister} className="mt-4 space-y-3">
               <div>
-                <label className="mb-1 block text-xs font-medium text-muted-foreground">Имя (необязательно)</label>
-                <Input name="name" type="text" placeholder="Как вас зовут" className="bg-background/60" />
+                <label className="mb-1 block text-xs font-medium text-muted-foreground">{t("auth.name")}</label>
+                <Input name="name" type="text" placeholder={t("auth.namePlaceholder")} className="bg-background/60" />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-muted-foreground">Email</label>
+                <label className="mb-1 block text-xs font-medium text-muted-foreground">{t("auth.email")}</label>
                 <Input name="email" type="email" required placeholder="you@example.com" className="bg-background/60" />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-muted-foreground">Пароль (мин. 6 символов)</label>
+                <label className="mb-1 block text-xs font-medium text-muted-foreground">{t("auth.passwordHint")}</label>
                 <Input name="password" type="password" required placeholder="••••••" className="bg-background/60" />
               </div>
               <Button type="submit" disabled={loading} className="w-full gap-2 bg-cinema hover:bg-cinema/90">
                 {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-                Создать аккаунт
+                {t("auth.createAccount")}
               </Button>
             </form>
           </TabsContent>

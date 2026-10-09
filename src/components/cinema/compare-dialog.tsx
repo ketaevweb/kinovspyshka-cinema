@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MoviePoster } from "./movie-poster";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n";
 import type { Movie } from "@/lib/types";
 
 interface CompareDialogProps {
@@ -27,6 +28,7 @@ export function CompareDialog({
   preselected = [],
   onPlay,
 }: CompareDialogProps) {
+  const { t } = useI18n();
   const [selected, setSelected] = useState<Movie[]>(preselected.slice(0, MAX_COMPARE));
   const [query, setQuery] = useState("");
 
@@ -62,14 +64,14 @@ export function CompareDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[92vh] w-full max-w-5xl overflow-hidden border-white/10 bg-background/95 p-0 sm:max-w-5xl">
-        <DialogTitle className="sr-only">Сравнение фильмов</DialogTitle>
+        <DialogTitle className="sr-only">{t("compare.title")}</DialogTitle>
         <ScrollArea className="cinema-scroll max-h-[92vh]">
           <div className="p-4 sm:p-6">
             <div className="mb-4 flex items-center gap-2">
               <GitCompare className="h-5 w-5 text-cinema" />
-              <h2 className="text-xl font-bold">Сравнение фильмов</h2>
+              <h2 className="text-xl font-bold">{t("compare.title")}</h2>
               <span className="ml-auto text-xs text-muted-foreground">
-                {selected.length}/{MAX_COMPARE} выбрано
+                {selected.length}/{MAX_COMPARE} {t("compare.selected")}
               </span>
             </div>
 
@@ -78,8 +80,7 @@ export function CompareDialog({
               <div className="mb-6 rounded-xl border border-dashed border-white/15 bg-card/40 p-8 text-center">
                 <GitCompare className="mx-auto mb-3 h-10 w-10 text-muted-foreground/50" />
                 <p className="text-sm text-muted-foreground">
-                  Выберите до {MAX_COMPARE} фильмов из списка ниже для сравнения по рейтингу,
-                  длительности, жанрам и другим параметрам.
+                  {t("compare.empty")}
                 </p>
               </div>
             ) : (
@@ -92,7 +93,7 @@ export function CompareDialog({
                     <button
                       onClick={() => removeMovie(m.id)}
                       className="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur transition hover:bg-cinema"
-                      aria-label="Убрать"
+                      aria-label={t("compare.remove")}
                     >
                       <X className="h-4 w-4" />
                     </button>
@@ -111,7 +112,7 @@ export function CompareDialog({
                   <div className="flex aspect-[2/3] items-center justify-center rounded-xl border border-dashed border-white/15 bg-card/40 text-center text-muted-foreground">
                     <div>
                       <Plus className="mx-auto mb-2 h-8 w-8 opacity-50" />
-                      <p className="text-xs">Добавьте ещё</p>
+                      <p className="text-xs">{t("compare.addMore")}</p>
                     </div>
                   </div>
                 )}
@@ -123,17 +124,17 @@ export function CompareDialog({
               <div className="mb-6 overflow-x-auto rounded-xl border border-white/10">
                 <table className="w-full text-sm">
                   <tbody>
-                    <CompareRow label="Название" icon={Star}>
+                    <CompareRow label={t("compare.col.title")} icon={Star}>
                       {selected.map((m) => (
                         <td key={m.id} className="p-3 font-semibold">{m.title}</td>
                       ))}
                     </CompareRow>
-                    <CompareRow label="Год" icon={Calendar}>
+                    <CompareRow label={t("compare.col.year")} icon={Calendar}>
                       {selected.map((m) => (
                         <td key={m.id} className="p-3">{m.year}</td>
                       ))}
                     </CompareRow>
-                    <CompareRow label="Рейтинг" icon={Star}>
+                    <CompareRow label={t("compare.col.rating")} icon={Star}>
                       {selected.map((m) => (
                         <td key={m.id} className="p-3">
                           <span className={cn(
@@ -146,38 +147,38 @@ export function CompareDialog({
                         </td>
                       ))}
                     </CompareRow>
-                    <CompareRow label="Длительность" icon={Clock}>
+                    <CompareRow label={t("compare.col.duration")} icon={Clock}>
                       {selected.map((m) => (
                         <td key={m.id} className="p-3">
                           <span className={cn(
                             m.duration === shortestDuration && "font-bold text-cinema"
                           )}>
-                            {m.duration} мин
+                            {m.duration} {t("movie.duration")}
                           </span>
                         </td>
                       ))}
                     </CompareRow>
-                    <CompareRow label="Жанры" icon={Star}>
+                    <CompareRow label={t("compare.col.genres")} icon={Star}>
                       {selected.map((m) => (
                         <td key={m.id} className="p-3 text-xs">{m.genres.join(", ")}</td>
                       ))}
                     </CompareRow>
-                    <CompareRow label="Страны" icon={Globe}>
+                    <CompareRow label={t("compare.col.countries")} icon={Globe}>
                       {selected.map((m) => (
                         <td key={m.id} className="p-3 text-xs">{m.countries.join(", ")}</td>
                       ))}
                     </CompareRow>
-                    <CompareRow label="Режиссёр" icon={Star}>
+                    <CompareRow label={t("compare.col.director")} icon={Star}>
                       {selected.map((m) => (
                         <td key={m.id} className="p-3 text-xs">{m.director}</td>
                       ))}
                     </CompareRow>
-                    <CompareRow label="Возраст" icon={Eye}>
+                    <CompareRow label={t("compare.col.age")} icon={Eye}>
                       {selected.map((m) => (
                         <td key={m.id} className="p-3">{m.ageRating}</td>
                       ))}
                     </CompareRow>
-                    <CompareRow label="Просмотры" icon={Eye}>
+                    <CompareRow label={t("compare.col.views")} icon={Eye}>
                       {selected.map((m) => (
                         <td key={m.id} className="p-3">
                           <span className={cn(
@@ -188,7 +189,7 @@ export function CompareDialog({
                         </td>
                       ))}
                     </CompareRow>
-                    <CompareRow label="Действие" icon={Star}>
+                    <CompareRow label={t("compare.col.action")} icon={Star}>
                       {selected.map((m) => (
                         <td key={m.id} className="p-3">
                           <Button
@@ -200,7 +201,7 @@ export function CompareDialog({
                               onPlay(m);
                             }}
                           >
-                            Открыть
+                            {t("compare.open")}
                           </Button>
                         </td>
                       ))}
@@ -217,7 +218,7 @@ export function CompareDialog({
                 <Input
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Поиск фильма для сравнения..."
+                  placeholder={t("compare.searchPlaceholder")}
                   className="rounded-full border-white/10 bg-background/60 pl-10"
                 />
               </div>

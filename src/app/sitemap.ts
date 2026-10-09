@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const BASE_URL = "https://kinovspyshka-cinema.vercel.app";
+const BASE_URL = "https://kino.kataevweb.ru";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   // Главная страница + страницы по жанрам

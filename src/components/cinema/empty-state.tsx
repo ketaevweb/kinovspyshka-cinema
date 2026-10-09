@@ -2,6 +2,7 @@
 
 import { Heart, History, SearchX, Film } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n";
 
 interface EmptyStateProps {
   variant: "favorites" | "history" | "search";
@@ -10,29 +11,30 @@ interface EmptyStateProps {
   actionLabel?: string;
 }
 
-const CONFIG = {
-  favorites: {
-    icon: Heart,
-    title: "Пока нет избранного",
-    description: "Добавляйте фильмы в избранное кнопкой ♥ — они появятся здесь",
-    actionLabel: "Смотреть каталог",
-  },
-  history: {
-    icon: History,
-    title: "История пуста",
-    description: "Открывайте фильмы — они появятся в этой секции",
-    actionLabel: "Начать просмотр",
-  },
-  search: {
-    icon: SearchX,
-    title: "Ничего не найдено",
-    description: "Попробуйте изменить запрос или фильтры",
-    actionLabel: "Сбросить фильтры",
-  },
-};
-
 export function EmptyState({ variant, className, onAction, actionLabel }: EmptyStateProps) {
-  const config = CONFIG[variant];
+  const { t } = useI18n();
+
+  const config = {
+    favorites: {
+      icon: Heart,
+      title: t("empty.favorites.title"),
+      description: t("empty.favorites.description"),
+      actionLabel: t("empty.favorites.action"),
+    },
+    history: {
+      icon: History,
+      title: t("empty.history.title"),
+      description: t("empty.history.description"),
+      actionLabel: t("empty.history.action"),
+    },
+    search: {
+      icon: SearchX,
+      title: t("empty.search.title"),
+      description: t("empty.search.description"),
+      actionLabel: t("empty.search.action"),
+    },
+  }[variant];
+
   const Icon = config.icon;
 
   return (

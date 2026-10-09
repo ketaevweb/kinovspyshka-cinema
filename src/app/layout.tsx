@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     "кино в HD",
   ],
   authors: [{ name: "КиноВспышка" }],
-  metadataBase: new URL("https://kinovspyshka-cinema.vercel.app"),
+  metadataBase: new URL("https://kino.kataevweb.ru"),
   alternates: {
     canonical: "/",
   },
@@ -59,7 +59,7 @@ export const metadata: Metadata = {
     siteName: "КиноВспышка",
     locale: "ru_RU",
     type: "website",
-    url: "https://kinovspyshka-cinema.vercel.app",
+    url: "https://kino.kataevweb.ru",
   },
   twitter: {
     card: "summary_large_image",
@@ -79,14 +79,14 @@ const jsonLd = {
   "@context": "https://schema.org",
   "@type": "WebSite",
   name: "КиноВспышка",
-  url: "https://kinovspyshka-cinema.vercel.app",
+  url: "https://kino.kataevweb.ru",
   description: "Онлайн-кинотеатр с 600 реальными фильмами в HD",
   inLanguage: "ru-RU",
   potentialAction: {
     "@type": "SearchAction",
     target: {
       "@type": "EntryPoint",
-      urlTemplate: "https://kinovspyshka-cinema.vercel.app/?q={search_term_string}",
+      urlTemplate: "https://kino.kataevweb.ru/?q={search_term_string}",
     },
     "query-input": "required name=search_term_string",
   },

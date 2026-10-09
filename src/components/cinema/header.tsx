@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useSession, signOut } from "next-auth/react";
-import { Play, Search, Menu, LogIn, LogOut, Heart, GitCompare } from "lucide-react";
+import { Play, Search, Menu, LogIn, LogOut, Heart, GitCompare, Shuffle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -16,6 +16,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { AuthDialog } from "./auth-dialog";
 import { ThemeToggle } from "./theme-toggle";
 import { LangToggle } from "./lang-toggle";
+import { AccentToggle } from "./accent-toggle";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +27,7 @@ interface HeaderProps {
   onFavoritesClick?: () => void;
   onCompareClick?: () => void;
   compareCount?: number;
+  onRandomClick?: () => void;
   authOpen?: boolean;
   onAuthOpenChange?: (open: boolean) => void;
 }
@@ -37,6 +39,7 @@ export function Header({
   onFavoritesClick,
   onCompareClick,
   compareCount = 0,
+  onRandomClick,
   authOpen,
   onAuthOpenChange,
 }: HeaderProps) {
@@ -102,7 +105,22 @@ export function Header({
           </Button>
 
           <ThemeToggle />
+          <AccentToggle />
           <LangToggle />
+
+          {/* Кнопка случайного фильма */}
+          {onRandomClick && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onRandomClick}
+              className="gap-1.5 text-muted-foreground transition hover:text-cinema"
+              title="Случайный фильм"
+            >
+              <Shuffle className="h-4 w-4" />
+              <span className="hidden lg:inline">Случайное</span>
+            </Button>
+          )}
 
           {/* Кнопка сравнения */}
           {onCompareClick && (

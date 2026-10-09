@@ -1,27 +1,37 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { Header } from "@/components/cinema/header";
+import dynamic from "next/dynamic";
 import { HeroCarousel } from "@/components/cinema/hero-carousel";
 import { SearchSection } from "@/components/cinema/search-section";
 import { MovieRow } from "@/components/cinema/movie-row";
 import { MovieGrid } from "@/components/cinema/movie-grid";
 import { VirtualMovieGrid } from "@/components/cinema/virtual-movie-grid";
-import { FilterPanel, type FilterState } from "@/components/cinema/filter-panel";
-import { MovieModal } from "@/components/cinema/movie-modal";
-import { CompareDialog } from "@/components/cinema/compare-dialog";
-import { CommandPalette } from "@/components/cinema/command-palette";
 import { CmdKHint } from "@/components/cinema/cmdk-hint";
 import { EmptyState } from "@/components/cinema/empty-state";
+import { AnimatedSection } from "@/components/cinema/animated-section";
+import { AdSlot } from "@/components/cinema/ad-slot";
+import { StatsPanel } from "@/components/cinema/stats-panel";
+import { Achievements } from "@/components/cinema/achievements";
 import { Footer } from "@/components/cinema/footer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 import { useFavorites } from "@/hooks/use-favorites";
 import { useWatchHistory } from "@/hooks/use-watch-history";
 import { useHotkeys } from "@/hooks/use-hotkeys";
+import { useCinemaStats } from "@/hooks/use-cinema-stats";
 import { useTheme } from "next-themes";
 import { useI18n, pluralize } from "@/lib/i18n";
 import type { Movie, Genre } from "@/lib/types";
+import type { FilterState } from "@/components/cinema/filter-panel";
+
+// Radix UI компоненты рендерим только на клиенте (fix hydration mismatch с ID)
+const Header = dynamic(() => import("@/components/cinema/header").then(m => m.Header), { ssr: false });
+const MovieModal = dynamic(() => import("@/components/cinema/movie-modal").then(m => m.MovieModal), { ssr: false });
+const CompareDialog = dynamic(() => import("@/components/cinema/compare-dialog").then(m => m.CompareDialog), { ssr: false });
+const CommandPalette = dynamic(() => import("@/components/cinema/command-palette").then(m => m.CommandPalette), { ssr: false });
+const PersonDialog = dynamic(() => import("@/components/cinema/person-dialog").then(m => m.PersonDialog), { ssr: false });
+const FilterPanel = dynamic(() => import("@/components/cinema/filter-panel").then(m => ({ default: m.FilterPanel, FilterPanel: m.FilterPanel })), { ssr: false, loading: () => <div className="h-9 w-48" /> });
 
 type SearchMode = "id" | "name" | "torrent";
 
@@ -74,9 +84,11 @@ export function HomeClient({ initialData }: HomeClientProps) {
   const [compareList, setCompareList] = useState<Movie[]>([]);
   const [commandOpen, setCommandOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
+  const [selectedPerson, setSelectedPerson] = useState<{ id: number; name: string; enName?: string; photo: string; profession: string; filmography: { slug: string; title: string; year: number; rating: number; kinopoiskId: number }[] } | null>(null);
+  const [personOpen, setPersonOpen] = useState(false);
 
   // Избранное: localStorage для гостей + сервер для авторизованных
-  const { favorites, toggleFavorite, isFavorite } = useFavorites();
+  const { favorites, toggleFavorite, isFavorite, exportFavorites } = useFavorites();
   // История просмотров (localStorage)
   const { history, addToHistory } = useWatchHistory();
 
@@ -110,6 +122,9 @@ export function HomeClient({ initialData }: HomeClientProps) {
       .map((x) => x.m);
   }, [favorites, allMovies]);
 
+  // Статистика просмотра
+  const stats = useCinemaStats(allMovies);
+
   // NewReleases вычисляем из SSR allMovies (сортировка по году)
   useEffect(() => {
     if (allMovies.length > 0) {
@@ -123,7 +138,7 @@ export function HomeClient({ initialData }: HomeClientProps) {
     setSelectedMovie(movie);
     setSimilar([]);
     setModalOpen(true);
-    addToHistory(movie); // записываем в историю просмотров
+    addToHistory(movie);
     try {
       const res = await fetch(`/api/movies/${movie.id}`);
       if (res.ok) {
@@ -134,6 +149,20 @@ export function HomeClient({ initialData }: HomeClientProps) {
       /* ignore */
     }
   }, [addToHistory]);
+
+  // Слушатель для открытия фильма из AI-чата (глобальное событие)
+  useEffect(() => {
+    const handler = async (e: Event) => {
+      const slug = (e as CustomEvent<string>).detail;
+      if (!slug) return;
+      const movie = allMovies.find((m) => m.id === slug);
+      if (movie) {
+        openMovie(movie);
+      }
+    };
+    window.addEventListener("cinema:open-movie", handler);
+    return () => window.removeEventListener("cinema:open-movie", handler);
+  }, [allMovies, openMovie]);
 
   // Поиск
   const handleSearch = useCallback(async (mode: SearchMode, query: string) => {
@@ -177,6 +206,7 @@ export function HomeClient({ initialData }: HomeClientProps) {
     { key: "l", handler: () => setLang(lang === "ru" ? "en" : "ru") },
     { key: "/", handler: () => document.getElementById("search")?.scrollIntoView({ behavior: "smooth" }) },
     { key: "c", handler: () => setCompareOpen(true) },
+    { key: "r", handler: () => { if (allMovies.length > 0) { const random = allMovies[Math.floor(Math.random() * allMovies.length)]; openMovie(random); } } },
   ]);
 
   // Фильтрация каталога (client-side через useMemo для мгновенного отклика)
@@ -236,6 +266,12 @@ export function HomeClient({ initialData }: HomeClientProps) {
         onFavoritesClick={() => document.getElementById("favorites")?.scrollIntoView({ behavior: "smooth" })}
         onCompareClick={() => setCompareOpen(true)}
         compareCount={compareList.length}
+        onRandomClick={() => {
+          if (allMovies.length > 0) {
+            const random = allMovies[Math.floor(Math.random() * allMovies.length)];
+            openMovie(random);
+          }
+        }}
         authOpen={authOpen}
         onAuthOpenChange={setAuthOpen}
       />
@@ -262,38 +298,66 @@ export function HomeClient({ initialData }: HomeClientProps) {
 
         {/* История просмотров (только если есть) */}
         {!loadingData && history.length > 0 && (
-          <MovieRow
-            id="history"
-            title={t("section.history")}
-            subtitle={`${t("section.historySub")} — ${history.length}`}
-            movies={history.map((h) => allMovies.find((m) => m.id === h.id)).filter(Boolean) as Movie[]}
-            onPlay={openMovie}
-            onInfo={openMovie}
-          />
+          <AnimatedSection>
+            <MovieRow
+              id="history"
+              title={t("section.history")}
+              subtitle={`${t("section.historySub")} — ${history.length}`}
+              movies={history.map((h) => allMovies.find((m) => m.id === h.id)).filter(Boolean) as Movie[]}
+              onPlay={openMovie}
+              onInfo={openMovie}
+            />
+          </AnimatedSection>
         )}
 
         {/* Избранное (только если есть избранные фильмы) */}
         {!loadingData && favorites.size > 0 && (
-          <MovieRow
-            id="favorites"
-            title={t("section.favorites")}
-            subtitle={`${favorites.size} ${pluralize(favorites.size, t("section.favoritesSub"), lang)} в подборке`}
-            movies={allMovies.filter((m) => favorites.has(m.id))}
-            onPlay={openMovie}
-            onInfo={openMovie}
-          />
+          <AnimatedSection delay={0.05}>
+            <MovieRow
+              id="favorites"
+              title={t("section.favorites")}
+              subtitle={`${favorites.size} ${pluralize(favorites.size, t("section.favoritesSub"), lang)} в подборке`}
+              movies={allMovies.filter((m) => favorites.has(m.id))}
+              onPlay={openMovie}
+              onInfo={openMovie}
+            />
+          </AnimatedSection>
         )}
 
         {/* Рекомендации на основе избранного (content-based) */}
         {!loadingData && recommendations.length > 0 && (
-          <MovieRow
-            id="recommendations"
-            title={t("section.recommendations")}
-            subtitle={t("section.recommendationsSub")}
-            movies={recommendations}
-            onPlay={openMovie}
-            onInfo={openMovie}
-          />
+          <AnimatedSection delay={0.1}>
+            <MovieRow
+              id="recommendations"
+              title={t("section.recommendations")}
+              subtitle={t("section.recommendationsSub")}
+              movies={recommendations}
+              onPlay={openMovie}
+              onInfo={openMovie}
+            />
+          </AnimatedSection>
+        )}
+
+        {/* Новинки в ваших жанрах */}
+        {!loadingData && favorites.size > 0 && allMovies.length > 0 && (
+          <AnimatedSection delay={0.15}>
+            <MovieRow
+              id="new-in-genres"
+              title="Новинки в ваших жанрах"
+              subtitle="Свежие фильмы в жанрах, которые вы смотрите"
+              movies={(() => {
+                const favGenres = new Set(
+                  allMovies.filter((m) => favorites.has(m.id)).flatMap((m) => m.genres)
+                );
+                return allMovies
+                  .filter((m) => !favorites.has(m.id) && m.year >= 2020 && m.genres.some((g) => favGenres.has(g)))
+                  .sort((a, b) => b.year - a.year)
+                  .slice(0, 14);
+              })()}
+              onPlay={openMovie}
+              onInfo={openMovie}
+            />
+          </AnimatedSection>
         )}
 
         {/* В тренде */}
@@ -326,6 +390,17 @@ export function HomeClient({ initialData }: HomeClientProps) {
             />
           ))
         )}
+
+        {/* Статистика просмотра */}
+        {!loadingData && stats.totalWatched > 0 && (
+          <AnimatedSection>
+            <StatsPanel stats={stats} />
+            <Achievements stats={stats} />
+          </AnimatedSection>
+        )}
+
+        {/* Премиум-промо / рекламный слот */}
+        <AdSlot variant="native" />
 
         {/* Каталог с расширенными фильтрами */}
         <section id="catalog" className="border-t border-white/5 bg-card/20 py-8">
@@ -363,7 +438,7 @@ export function HomeClient({ initialData }: HomeClientProps) {
                 actionLabel={t("filters.reset")}
               />
             ) : (
-              <VirtualMovieGrid
+              <MovieGrid
                 movies={filteredMovies}
                 onPlay={openMovie}
                 onInfo={openMovie}
@@ -412,9 +487,17 @@ export function HomeClient({ initialData }: HomeClientProps) {
         )}
       </main>
 
-      <CmdKHint onClick={() => setCommandOpen(true)} />
+      <CmdKHint
+        onClick={() => setCommandOpen(true)}
+        onRandomClick={() => {
+          if (allMovies.length > 0) {
+            const random = allMovies[Math.floor(Math.random() * allMovies.length)];
+            openMovie(random);
+          }
+        }}
+      />
 
-      <Footer />
+      <Footer favoritesCount={favorites.size} onExportFavorites={exportFavorites} />
 
       <MovieModal
         movie={selectedMovie}
@@ -424,6 +507,18 @@ export function HomeClient({ initialData }: HomeClientProps) {
         onPlay={openMovie}
         onAddToFavorites={toggleFavorite}
         favoriteIds={favorites}
+        onPersonClick={(person) => {
+          setSelectedPerson(person);
+          setPersonOpen(true);
+        }}
+      />
+
+      <PersonDialog
+        person={selectedPerson}
+        open={personOpen}
+        onOpenChange={setPersonOpen}
+        allMovies={allMovies}
+        onPlay={openMovie}
       />
 
       <CompareDialog

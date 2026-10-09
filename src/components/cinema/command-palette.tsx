@@ -24,6 +24,7 @@ import {
   Play,
 } from "lucide-react";
 import { useTheme } from "next-themes";
+import { useI18n } from "@/lib/i18n";
 import type { Movie } from "@/lib/types";
 import { useDebounce } from "@/hooks/use-debounce";
 
@@ -50,6 +51,7 @@ export function CommandPalette({
   onLogin,
   isAuthed,
 }: CommandPaletteProps) {
+  const { t } = useI18n();
   const { theme, setTheme } = useTheme();
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebounce(query, 200);
@@ -104,16 +106,16 @@ export function CommandPalette({
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
       <CommandInput
-        placeholder="Поиск фильма или команда..."
+        placeholder={t("cmd.searchPlaceholder")}
         value={query}
         onValueChange={setQuery}
       />
       <CommandList className="max-h-[420px]">
-        <CommandEmpty>Ничего не найдено. Попробуйте другой запрос.</CommandEmpty>
+        <CommandEmpty>{t("cmd.nothingFound")}</CommandEmpty>
 
         {/* Результаты поиска фильмов */}
         {results.length > 0 && (
-          <CommandGroup heading="Фильмы" className="text-muted-foreground">
+          <CommandGroup heading={t("cmd.movies")} className="text-muted-foreground">
             {results.map((m) => (
               <CommandItem
                 key={m.id}
@@ -137,71 +139,70 @@ export function CommandPalette({
         {/* Быстрая навигация */}
         {!query && (
           <>
-            <CommandGroup heading="Навигация" className="text-muted-foreground">
+            <CommandGroup heading={t("cmd.navigation")} className="text-muted-foreground">
               <CommandItem onSelect={() => handleNavigate("#hero")} className="gap-3">
                 <Play className="h-4 w-4 text-cinema" />
-                Главная
+                {t("nav.home")}
               </CommandItem>
               <CommandItem onSelect={() => handleNavigate("#catalog")} className="gap-3">
                 <Film className="h-4 w-4 text-cinema" />
-                Каталог
+                {t("nav.catalog")}
               </CommandItem>
               <CommandItem onSelect={() => handleNavigate("#trending")} className="gap-3">
                 <TrendingUp className="h-4 w-4 text-cinema" />
-                В тренде
+                {t("nav.trending")}
               </CommandItem>
               <CommandItem onSelect={() => handleNavigate("#new")} className="gap-3">
                 <Sparkles className="h-4 w-4 text-cinema" />
-                Новинки
+                {t("nav.new")}
               </CommandItem>
               <CommandItem onSelect={() => handleNavigate("#search")} className="gap-3">
                 <Search className="h-4 w-4 text-cinema" />
-                Поиск
+                {t("nav.search")}
               </CommandItem>
               {favoritesCount > 0 && (
                 <CommandItem onSelect={() => handleNavigate("#favorites")} className="gap-3">
                   <Heart className="h-4 w-4 fill-cinema text-cinema" />
-                  Избранное ({favoritesCount})
+                  {t("catalog.favorites")} ({favoritesCount})
                 </CommandItem>
               )}
             </CommandGroup>
 
             <CommandSeparator />
 
-            <CommandGroup heading="Действия" className="text-muted-foreground">
+            <CommandGroup heading={t("cmd.actions")} className="text-muted-foreground">
               <CommandItem onSelect={() => { onOpenChange(false); onCompare(); }} className="gap-3">
                 <GitCompare className="h-4 w-4 text-cinema" />
-                Сравнить фильмы
+                {t("cmd.compare")}
               </CommandItem>
               <CommandItem onSelect={toggleTheme} className="gap-3">
                 {theme === "dark" ? (
                   <>
                     <Sun className="h-4 w-4 text-cinema" />
-                    Светлая тема
+                    {t("theme.light")}
                   </>
                 ) : (
                   <>
                     <Moon className="h-4 w-4 text-cinema" />
-                    Тёмная тема
+                    {t("theme.dark")}
                   </>
                 )}
               </CommandItem>
               {!isAuthed && (
                 <CommandItem onSelect={() => { onOpenChange(false); onLogin(); }} className="gap-3">
                   <LogIn className="h-4 w-4 text-cinema" />
-                  Войти
+                  {t("nav.login")}
                 </CommandItem>
               )}
             </CommandGroup>
 
             <CommandSeparator />
 
-            <CommandGroup heading="Подсказки" className="text-muted-foreground">
+            <CommandGroup heading={t("cmd.hints")} className="text-muted-foreground">
               <CommandItem disabled className="gap-3 opacity-60">
                 <Languages className="h-4 w-4" />
                 <span className="text-xs">
-                  Нажмите <kbd className="rounded bg-muted px-1">⌘K</kbd> для открытия ·
-                  Введите название для поиска · Стрелки для навигации
+                  {t("cmd.hintText")}
                 </span>
               </CommandItem>
             </CommandGroup>
