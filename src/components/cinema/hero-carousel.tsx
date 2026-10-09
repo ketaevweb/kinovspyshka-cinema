@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Image from "next/image";
 import useEmblaCarousel from "embla-carousel-react";
 import { Play, Info, Star, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -164,16 +165,18 @@ export function HeroCarousel({ movies, onPlay, onInfo }: HeroCarouselProps) {
 }
 
 function BackdropImage({ src, alt }: { src: string; alt: string }) {
+  const [error, setError] = useState(false);
   return (
     <div className="absolute inset-0">
-      {src ? (
-        <img
+      {src && !error ? (
+        <Image
           src={src}
           alt={alt}
-          className="h-full w-full object-cover"
-          onError={(e) => {
-            (e.currentTarget as HTMLImageElement).style.display = "none";
-          }}
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+          onError={() => setError(true)}
         />
       ) : (
         <div className="h-full w-full bg-gradient-to-br from-zinc-800 via-zinc-900 to-black" />

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import type { Movie } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -109,14 +110,16 @@ export function MoviePoster({ movie, className, showTitle = true }: MoviePosterP
   return (
     <div className={cn("relative h-full w-full overflow-hidden bg-zinc-900", className)}>
       {procedural}
-      <img
+      <Image
         src={posterUrl}
         alt={movie.title}
         loading="lazy"
+        fill
+        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw"
         onLoad={() => setImgLoaded(true)}
         onError={() => setImgError(true)}
         className={cn(
-          "absolute inset-0 h-full w-full object-cover transition-opacity duration-500",
+          "object-cover transition-opacity duration-500",
           imgLoaded ? "opacity-100" : "opacity-0"
         )}
       />

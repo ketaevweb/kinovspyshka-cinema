@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { Search, Hash, FileText, Download, ArrowRight, ExternalLink } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Search, Hash, FileText, Download, ArrowRight, ExternalLink, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useDebounce } from "@/hooks/use-debounce";
 import type { Movie } from "@/lib/types";
 import { MoviePoster } from "./movie-poster";
 
@@ -38,10 +39,76 @@ export function SearchSection({
   onPlay,
 }: SearchSectionProps) {
   const [focused, setFocused] = useState(false);
+  const [suggestions, setSuggestions] = useState<Movie[]>([]);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Debounced запрос для live-подсказок (только в режиме "по названию")
+  const debouncedQuery = useDebounce(query, 250);
+
+  // Производный флаг загрузки: true, пока debounce не догнал введённый запрос
+  const suggestionsLoading = focused && mode === "name" && query !== debouncedQuery && query.trim().length >= 2;
+
+  useEffect(() => {
+    // Подсказки только при поиске по названию, минимум 2 символа, поле в фокусе
+    if (mode !== "name" || debouncedQuery.trim().length < 2 || !focused) {
+      return;
+    }
+    let active = true;
+    fetch(`/api/search?q=${encodeURIComponent(debouncedQuery)}&limit=6`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (active) {
+          setSuggestions(data.results ?? []);
+          setHighlightedIndex(-1);
+        }
+      })
+      .catch(() => {
+        if (active) setSuggestions([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, [debouncedQuery, mode, focused]);
+
+  // Закрытие подсказок при клике вне
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setFocused(false);
+      }
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSearch(mode, query);
+    setFocused(false);
+  };
+
+  const showSuggestions = focused && suggestions.length > 0;
+  const showSuggestionsLoading = focused && suggestionsLoading && debouncedQuery.trim().length >= 2;
+
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (!showSuggestions) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setHighlightedIndex((i) => Math.min(i + 1, suggestions.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setHighlightedIndex((i) => Math.max(i - 1, -1));
+    } else if (e.key === "Enter" && highlightedIndex >= 0) {
+      e.preventDefault();
+      const m = suggestions[highlightedIndex];
+      if (m) {
+        onPlay(m);
+        setFocused(false);
+      }
+    } else if (e.key === "Escape") {
+      setFocused(false);
+    }
   };
 
   return (
@@ -78,18 +145,19 @@ export function SearchSection({
           })}
         </div>
 
-        {/* Форма поиска */}
-        <form onSubmit={handleSubmit} className="mt-6">
+        {/* Форма поиска с live-подсказками */}
+        <form onSubmit={handleSubmit} className="mt-6" ref={containerRef}>
           <div className="relative">
-            <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+            <Search className="pointer-events-none absolute left-4 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onFocus={() => setFocused(true)}
-              onBlur={() => setFocused(false)}
+              onKeyDown={onKeyDown}
               placeholder={MODES.find((m) => m.id === mode)?.placeholder}
               inputMode={mode === "id" ? "numeric" : "text"}
               type={mode === "id" ? "number" : "search"}
+              autoComplete="off"
               className={cn(
                 "h-14 rounded-full border-white/10 bg-background/60 pl-12 pr-32 text-base shadow-inner transition",
                 focused && "ring-2 ring-cinema/50"
@@ -97,11 +165,52 @@ export function SearchSection({
             />
             <Button
               type="submit"
-              className="absolute right-2 top-1/2 h-10 -translate-y-1/2 gap-1 rounded-full bg-cinema px-5 text-white hover:bg-cinema/90"
+              className="absolute right-2 top-1/2 z-10 h-10 -translate-y-1/2 gap-1 rounded-full bg-cinema px-5 text-white hover:bg-cinema/90"
             >
               Искать
               <ArrowRight className="h-4 w-4" />
             </Button>
+
+            {/* Выпадающие live-подсказки */}
+            {(showSuggestions || showSuggestionsLoading) && (
+              <div className="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-xl border border-white/10 bg-popover/95 shadow-2xl backdrop-blur-xl">
+                {showSuggestionsLoading && (
+                  <div className="flex items-center justify-center gap-2 px-4 py-6 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Поиск…
+                  </div>
+                )}
+                {showSuggestions &&
+                  suggestions.map((m, i) => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onMouseEnter={() => setHighlightedIndex(i)}
+                      onClick={() => {
+                        onPlay(m);
+                        setFocused(false);
+                      }}
+                      className={cn(
+                        "flex w-full items-center gap-3 border-b border-white/5 px-3 py-2 text-left transition last:border-0",
+                        highlightedIndex === i ? "bg-cinema/15" : "hover:bg-white/5"
+                      )}
+                    >
+                      <div className="h-16 w-11 shrink-0 overflow-hidden rounded">
+                        <MoviePoster movie={m} showTitle={false} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold">{m.title}</p>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {m.year} · {m.genres.join(", ")} · ★ {m.rating.toFixed(1)}
+                        </p>
+                      </div>
+                      <span className="shrink-0 rounded bg-cinema/10 px-2 py-0.5 text-[10px] font-medium text-cinema">
+                        Открыть
+                      </span>
+                    </button>
+                  ))}
+              </div>
+            )}
           </div>
 
           {mode === "id" && (

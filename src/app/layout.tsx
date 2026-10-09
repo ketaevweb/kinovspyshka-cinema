@@ -14,32 +14,79 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "КиноВспышка — онлайн-кинотеатр",
+  title: {
+    default: "КиноВспышка — онлайн-кинотеатр: 600 фильмов в HD",
+    template: "%s · КиноВспышка",
+  },
   description:
-    "Смотрите фильмы и сериалы онлайн в HD. Большая коллекция, удобный поиск по названию и ID Кинопоиска, трейлеры и плеер. Приятного просмотра!",
+    "Онлайн-кинотеатр КиноВспышка — 600 реальных фильмов с данными Кинопоиска. Смотрите онлайн в HD, ищите по названию или ID Кинопоиска, фильтруйте по жанрам. Приятного просмотра!",
   keywords: [
     "онлайн кинотеатр",
     "смотреть фильмы онлайн",
-    "сериалы",
+    "сериалы онлайн",
     "Кинопоиск",
     "HD фильмы",
     "трейлеры",
+    "бесплатные фильмы",
+    "kinopoisk",
+    "кино в HD",
   ],
   authors: [{ name: "КиноВспышка" }],
+  metadataBase: new URL("https://kinovspyshka-cinema.vercel.app"),
+  alternates: {
+    canonical: "/",
+  },
   icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
+    icon: [
+      { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
+  appleWebApp: {
+    capable: true,
+    title: "КиноВспышка",
+    statusBarStyle: "black-translucent",
   },
   openGraph: {
-    title: "КиноВспышка — онлайн-кинотеатр",
+    title: "КиноВспышка — онлайн-кинотеатр: 600 фильмов в HD",
     description:
-      "Смотрите фильмы и сериалы онлайн в HD. Большая коллекция и удобный поиск.",
+      "600 реальных фильмов с данными Кинопоиска. Смотрите онлайн в HD, ищите по названию или ID Кинопоиска.",
     siteName: "КиноВспышка",
+    locale: "ru_RU",
     type: "website",
+    url: "https://kinovspyshka-cinema.vercel.app",
   },
   twitter: {
     card: "summary_large_image",
     title: "КиноВспышка — онлайн-кинотеатр",
-    description: "Смотрите фильмы и сериалы онлайн в HD.",
+    description: "600 фильмов в HD. Смотрите онлайн, ищите по ID Кинопоиска.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large" },
+  },
+  manifest: "/manifest.webmanifest",
+};
+
+// JSON-LD structured data для Google Rich Results
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "КиноВспышка",
+  url: "https://kinovspyshka-cinema.vercel.app",
+  description: "Онлайн-кинотеатр с 600 реальными фильмами в HD",
+  inLanguage: "ru-RU",
+  potentialAction: {
+    "@type": "SearchAction",
+    target: {
+      "@type": "EntryPoint",
+      urlTemplate: "https://kinovspyshka-cinema.vercel.app/?q={search_term_string}",
+    },
+    "query-input": "required name=search_term_string",
   },
 };
 
@@ -50,6 +97,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ru" className="dark" suppressHydrationWarning>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >

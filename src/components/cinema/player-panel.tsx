@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Play, ExternalLink, Search, Film, ShieldOff, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -59,11 +60,13 @@ export function PlayerPanel({
       {/* Кинематографичный фон: реальный backdrop при наличии, иначе градиент */}
       <div className="absolute inset-0">
         {bg && !imgError ? (
-          <img
+          <Image
             src={bg}
             alt={title}
-            className="h-full w-full object-cover opacity-40"
-            referrerPolicy="no-referrer"
+            fill
+            priority
+            sizes="(max-width: 1024px) 100vw, 1024px"
+            className="object-cover opacity-40"
             onError={() => setImgError(true)}
           />
         ) : (

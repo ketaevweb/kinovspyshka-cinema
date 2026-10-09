@@ -10,8 +10,7 @@ import { GenreFilter } from "@/components/cinema/genre-filter";
 import { MovieModal } from "@/components/cinema/movie-modal";
 import { Footer } from "@/components/cinema/footer";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { ChevronDown } from "lucide-react";
+import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 import type { Movie, Genre } from "@/lib/types";
 
 type SearchMode = "id" | "name" | "torrent";
@@ -145,6 +144,13 @@ export default function Home() {
   const filteredMovies =
     selectedGenre === "Все" ? allMovies : allMovies.filter((m) => m.genres.includes(selectedGenre));
 
+  // Бесконечная прокрутка каталога
+  const hasMore = filteredMovies.length > catalogVisible;
+  const { sentinelRef, isLoading: isLoadingMore } = useInfiniteScroll(
+    () => setCatalogVisible((v) => v + 24),
+    { resetKey: selectedGenre, hasMore }
+  );
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Header onSearchClick={handleHeaderSearch} onLogoClick={handleLogoClick} />
@@ -221,21 +227,25 @@ export default function Home() {
             )}
           </div>
 
-          {/* Пагинация «Показать ещё» */}
-          {!loadingData && filteredMovies.length > catalogVisible && (
-            <div className="mt-8 flex flex-col items-center gap-2">
-              <Button
-                variant="secondary"
-                size="lg"
-                onClick={() => setCatalogVisible((v) => v + 24)}
-                className="gap-2 rounded-full border-white/10 bg-card hover:border-cinema hover:text-cinema"
-              >
-                <ChevronDown className="h-4 w-4" />
-                Показать ещё 24
-              </Button>
+          {/* Бесконечная прокрутка: sentinel + скелетоны при подгрузке */}
+          {!loadingData && hasMore && (
+            <div className="mt-8 flex flex-col items-center gap-3">
+              {isLoadingMore && (
+                <div className="mx-auto grid w-full max-w-7xl grid-cols-2 gap-3 px-4 sm:grid-cols-3 sm:gap-4 sm:px-6 md:grid-cols-4 lg:grid-cols-5 lg:px-8 xl:grid-cols-6">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i}>
+                      <Skeleton className="aspect-[2/3] w-full rounded-xl" />
+                      <Skeleton className="mt-2 h-4 w-full" />
+                      <Skeleton className="mt-1 h-3 w-2/3" />
+                    </div>
+                  ))}
+                </div>
+              )}
               <p className="text-xs text-muted-foreground">
                 Показано {Math.min(catalogVisible, filteredMovies.length)} из {filteredMovies.length}
               </p>
+              {/* Sentinel — наблюдатель IntersectionObserver срабатывает при попадании в viewport */}
+              <div ref={sentinelRef} className="h-4 w-full" aria-hidden />
             </div>
           )}
         </section>
