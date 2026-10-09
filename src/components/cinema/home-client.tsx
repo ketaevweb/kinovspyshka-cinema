@@ -9,6 +9,8 @@ import { MovieGrid } from "@/components/cinema/movie-grid";
 import { FilterPanel, type FilterState } from "@/components/cinema/filter-panel";
 import { MovieModal } from "@/components/cinema/movie-modal";
 import { CompareDialog } from "@/components/cinema/compare-dialog";
+import { CommandPalette } from "@/components/cinema/command-palette";
+import { CmdKHint } from "@/components/cinema/cmdk-hint";
 import { Footer } from "@/components/cinema/footer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
@@ -64,6 +66,8 @@ export function HomeClient({ initialData }: HomeClientProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const [compareOpen, setCompareOpen] = useState(false);
   const [compareList, setCompareList] = useState<Movie[]>([]);
+  const [commandOpen, setCommandOpen] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
 
   // Избранное: localStorage для гостей + сервер для авторизованных
   const { favorites, toggleFavorite, isFavorite } = useFavorites();
@@ -216,6 +220,8 @@ export function HomeClient({ initialData }: HomeClientProps) {
         onFavoritesClick={() => document.getElementById("favorites")?.scrollIntoView({ behavior: "smooth" })}
         onCompareClick={() => setCompareOpen(true)}
         compareCount={compareList.length}
+        authOpen={authOpen}
+        onAuthOpenChange={setAuthOpen}
       />
 
       <main className="flex-1">
@@ -384,6 +390,8 @@ export function HomeClient({ initialData }: HomeClientProps) {
         )}
       </main>
 
+      <CmdKHint onClick={() => setCommandOpen(true)} />
+
       <Footer />
 
       <MovieModal
@@ -402,6 +410,20 @@ export function HomeClient({ initialData }: HomeClientProps) {
         allMovies={allMovies}
         preselected={compareList}
         onPlay={openMovie}
+      />
+
+      <CommandPalette
+        open={commandOpen}
+        onOpenChange={setCommandOpen}
+        allMovies={allMovies}
+        favoritesCount={favorites.size}
+        onPlay={openMovie}
+        onNavigate={(anchor) => {
+          document.querySelector(anchor)?.scrollIntoView({ behavior: "smooth" });
+        }}
+        onCompare={() => setCompareOpen(true)}
+        onLogin={() => setAuthOpen(true)}
+        isAuthed={false}
       />
     </div>
   );

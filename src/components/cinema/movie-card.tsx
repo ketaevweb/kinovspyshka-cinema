@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { Play, Star, Plus, Info, GitCompare } from "lucide-react";
 import type { Movie } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -16,7 +17,10 @@ interface MovieCardProps {
 
 export function MovieCard({ movie, onPlay, onInfo, onCompare, inCompare, variant = "grid" }: MovieCardProps) {
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
       className={cn(
         "group relative cursor-pointer overflow-hidden rounded-xl border border-white/5 bg-card transition-all duration-300 hover:border-cinema/50 hover:shadow-[0_10px_40px_-12px_oklch(0.605_0.234_27.4/0.5)]",
         variant === "grid" ? "w-full" : "w-[150px] shrink-0 sm:w-[170px]"
@@ -98,6 +102,6 @@ export function MovieCard({ movie, onPlay, onInfo, onCompare, inCompare, variant
           {movie.year} · {movie.genres[0]}
         </p>
       </div>
-    </div>
+    </motion.div>
   );
 }

@@ -25,6 +25,8 @@ interface HeaderProps {
   onFavoritesClick?: () => void;
   onCompareClick?: () => void;
   compareCount?: number;
+  authOpen?: boolean;
+  onAuthOpenChange?: (open: boolean) => void;
 }
 
 export function Header({
@@ -34,10 +36,16 @@ export function Header({
   onFavoritesClick,
   onCompareClick,
   compareCount = 0,
+  authOpen,
+  onAuthOpenChange,
 }: HeaderProps) {
   const { data: session, status } = useSession();
-  const [authOpen, setAuthOpen] = useState(false);
+  const [internalAuthOpen, setInternalAuthOpen] = useState(false);
   const authenticated = status === "authenticated";
+
+  // Используем внешний control если передан, иначе внутренний
+  const isAuthOpen = authOpen ?? internalAuthOpen;
+  const setAuthOpen = onAuthOpenChange ?? setInternalAuthOpen;
 
   const userName = session?.user?.name || session?.user?.email || "Пользователь";
   const initials = userName
@@ -184,7 +192,7 @@ export function Header({
         </div>
       </div>
 
-      <AuthDialog open={authOpen} onOpenChange={setAuthOpen} />
+      <AuthDialog open={isAuthOpen} onOpenChange={setAuthOpen} />
     </header>
   );
 }
