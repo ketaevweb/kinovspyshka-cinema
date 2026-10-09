@@ -4,6 +4,13 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { PlayerPanel } from "./player-panel";
 import { MovieCard } from "./movie-card";
 import {
@@ -17,6 +24,9 @@ import {
   Share2,
   Plus,
   Check,
+  Send,
+  MessageCircle,
+  Copy,
 } from "lucide-react";
 import type { Movie } from "@/lib/types";
 
@@ -170,9 +180,7 @@ export function MovieModal({
                       )}
                     </Button>
                   )}
-                  <Button variant="secondary" className="gap-2">
-                    <Share2 className="h-4 w-4" /> Поделиться
-                  </Button>
+                  <ShareMenu movie={movie} />
                   <Button variant="secondary" className="gap-2" asChild>
                     <a
                       href={`https://www.youtube.com/results?search_query=${encodeURIComponent(
@@ -234,4 +242,50 @@ function formatViews(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K`;
   return String(n);
+}
+
+function ShareMenu({ movie }: { movie: Movie }) {
+  const siteUrl = typeof window !== "undefined" ? window.location.origin : "https://kinovspyshka-cinema.vercel.app";
+  const filmUrl = `${siteUrl}/?film=${movie.kinopoiskId}`;
+  const shareText = `🎬 Смотрите «${movie.title}» (${movie.year}) на КиноВспышке!`;
+
+  const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(filmUrl)}&text=${encodeURIComponent(shareText)}`;
+  const vkUrl = `https://vk.com/share.php?url=${encodeURIComponent(filmUrl)}&title=${encodeURIComponent(shareText)}`;
+  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText + " " + filmUrl)}`;
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="secondary" className="gap-2">
+          <Share2 className="h-4 w-4" /> Поделиться
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuItem asChild>
+          <a href={telegramUrl} target="_blank" rel="noopener noreferrer" className="gap-2">
+            <Send className="h-4 w-4 text-cinema" /> Telegram
+          </a>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <a href={vkUrl} target="_blank" rel="noopener noreferrer" className="gap-2">
+            <Share2 className="h-4 w-4" /> ВКонтакте
+          </a>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="gap-2">
+            <MessageCircle className="h-4 w-4" /> WhatsApp
+          </a>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onClick={() => {
+            navigator.clipboard?.writeText(filmUrl);
+          }}
+          className="gap-2"
+        >
+          <Copy className="h-4 w-4" /> Копировать ссылку
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 }

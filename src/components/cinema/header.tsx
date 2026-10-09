@@ -15,6 +15,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { AuthDialog } from "./auth-dialog";
 import { ThemeToggle } from "./theme-toggle";
+import { LangToggle } from "./lang-toggle";
 import { cn } from "@/lib/utils";
 
 interface HeaderProps {
@@ -91,6 +92,7 @@ export function Header({
           </Button>
 
           <ThemeToggle />
+          <LangToggle />
 
           {/* Кнопка сравнения */}
           {onCompareClick && (

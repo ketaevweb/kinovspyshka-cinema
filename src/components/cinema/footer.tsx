@@ -32,7 +32,9 @@ export function Footer() {
 
           <div className="flex items-center gap-3">
             <a
-              href="#"
+              href="https://t.me/share/url?url=https://kinovspyshka-cinema.vercel.app"
+              target="_blank"
+              rel="noopener noreferrer"
               aria-label="Telegram"
               className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-background/60 text-muted-foreground transition hover:border-cinema hover:text-cinema"
             >
