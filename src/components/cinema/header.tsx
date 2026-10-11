@@ -17,6 +17,7 @@ import { AuthDialog } from "./auth-dialog";
 import { ThemeToggle } from "./theme-toggle";
 import { LangToggle } from "./lang-toggle";
 import { AccentToggle } from "./accent-toggle";
+import { MobileMenu } from "./mobile-menu";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -225,6 +226,13 @@ export function Header({
             </Button>
           )}
 
+          <MobileMenu
+            onNavigate={(anchor) => document.querySelector(anchor)?.scrollIntoView({ behavior: "smooth" })}
+            onRandomClick={onRandomClick}
+            onCompareClick={onCompareClick}
+            favoritesCount={favoritesCount}
+            watchHistoryCount={watchHistoryCount}
+          />
           <Button variant="ghost" size="icon" className="hidden md:inline-flex" aria-label="Меню">
             <Menu className="h-5 w-5" />
           </Button>
