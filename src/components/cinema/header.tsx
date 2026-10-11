@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSession, signOut } from "next-auth/react";
-import { Play, Search, Menu, LogIn, LogOut, Heart, GitCompare, Shuffle } from "lucide-react";
+import { Play, Search, Menu, LogIn, LogOut, Heart, GitCompare, Shuffle, User, Clock, Star, Film } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -28,6 +28,8 @@ interface HeaderProps {
   onCompareClick?: () => void;
   compareCount?: number;
   onRandomClick?: () => void;
+  onProfileClick?: () => void;
+  watchHistoryCount?: number;
   authOpen?: boolean;
   onAuthOpenChange?: (open: boolean) => void;
 }
@@ -40,6 +42,8 @@ export function Header({
   onCompareClick,
   compareCount = 0,
   onRandomClick,
+  onProfileClick,
+  watchHistoryCount = 0,
   authOpen,
   onAuthOpenChange,
 }: HeaderProps) {
@@ -47,7 +51,6 @@ export function Header({
   const [internalAuthOpen, setInternalAuthOpen] = useState(false);
   const authenticated = status === "authenticated";
 
-  // Используем внешний control если передан, иначе внутренний
   const isAuthOpen = authOpen ?? internalAuthOpen;
   const setAuthOpen = onAuthOpenChange ?? setInternalAuthOpen;
   const { t } = useI18n();
@@ -179,12 +182,28 @@ export function Header({
                   )}
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                {onProfileClick && (
+                  <DropdownMenuItem onClick={onProfileClick} className="gap-2">
+                    <User className="h-4 w-4" />
+                    Мой профиль
+                  </DropdownMenuItem>
+                )}
                 {favoritesCount > 0 && (
                   <DropdownMenuItem onClick={onFavoritesClick} className="gap-2">
                     <Heart className="h-4 w-4 fill-cinema text-cinema" />
                     {t("catalog.favorites")} ({favoritesCount})
                   </DropdownMenuItem>
                 )}
+                {watchHistoryCount > 0 && (
+                  <DropdownMenuItem onClick={() => document.getElementById("history")?.scrollIntoView({ behavior: "smooth" })} className="gap-2">
+                    <Clock className="h-4 w-4" />
+                    История ({watchHistoryCount})
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem onClick={() => document.getElementById("catalog")?.scrollIntoView({ behavior: "smooth" })} className="gap-2">
+                  <Film className="h-4 w-4" />
+                  Каталог
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() => signOut({ callbackUrl: "/" })}

@@ -27720,10 +27720,29 @@ export function getMovieByKinopoiskId(kpId: number): Movie | undefined {
 export function searchMovies(query: string): Movie[] {
   const q = query.trim().toLowerCase();
   if (!q) return [];
-  return movies().filter((m) => {
-    const haystack = [m.title, m.originalTitle, m.director, m.description, m.genres.join(" "), m.cast.join(" "), String(m.year), String(m.kinopoiskId)].join(" ").toLowerCase();
-    return haystack.includes(q);
-  }).slice(0, 30);
+  const words = q.split(/\s+/).filter((w) => w.length >= 2);
+  if (words.length === 0) return [];
+
+  return movies()
+    .map((m) => {
+      const haystack = [m.title, m.originalTitle, m.director, m.description, m.genres.join(" "), m.cast.join(" "), String(m.year), String(m.kinopoiskId)].join(" ").toLowerCase();
+      // Подсчёт очков: сколько слов из запроса найдены
+      let score = 0;
+      // Точное совпадение названия — высший приоритет
+      if (m.title.toLowerCase() === q || m.originalTitle.toLowerCase() === q) score += 100;
+      // Частичное совпадение названия
+      if (m.title.toLowerCase().includes(q) || m.originalTitle.toLowerCase().includes(q)) score += 50;
+      // Каждое слово из запроса
+      for (const w of words) {
+        if (haystack.includes(w)) score += 10;
+        if (m.title.toLowerCase().includes(w) || m.originalTitle.toLowerCase().includes(w)) score += 5;
+      }
+      return { m, score };
+    })
+    .filter((x) => x.score > 0)
+    .sort((a, b) => b.score - a.score || b.m.rating - a.m.rating)
+    .slice(0, 30)
+    .map((x) => x.m);
 }
 
 export function getMoviesByGenre(genre: string): Movie[] {

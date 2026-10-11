@@ -272,6 +272,8 @@ export function HomeClient({ initialData }: HomeClientProps) {
             openMovie(random);
           }
         }}
+        onProfileClick={() => document.getElementById("stats")?.scrollIntoView({ behavior: "smooth" })}
+        watchHistoryCount={history.length}
         authOpen={authOpen}
         onAuthOpenChange={setAuthOpen}
       />
@@ -394,8 +396,10 @@ export function HomeClient({ initialData }: HomeClientProps) {
         {/* Статистика просмотра */}
         {!loadingData && stats.totalWatched > 0 && (
           <AnimatedSection>
-            <StatsPanel stats={stats} />
-            <Achievements stats={stats} />
+            <div id="stats">
+              <StatsPanel stats={stats} />
+              <Achievements stats={stats} />
+            </div>
           </AnimatedSection>
         )}
 
