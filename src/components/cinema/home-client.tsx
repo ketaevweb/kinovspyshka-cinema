@@ -13,6 +13,7 @@ import { AnimatedSection } from "@/components/cinema/animated-section";
 import { AdSlot } from "@/components/cinema/ad-slot";
 import { StatsPanel } from "@/components/cinema/stats-panel";
 import { Achievements } from "@/components/cinema/achievements";
+import { ContinueWatching } from "@/components/cinema/continue-watching";
 import { Footer } from "@/components/cinema/footer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
@@ -20,6 +21,7 @@ import { useFavorites } from "@/hooks/use-favorites";
 import { useWatchHistory } from "@/hooks/use-watch-history";
 import { useHotkeys } from "@/hooks/use-hotkeys";
 import { useCinemaStats } from "@/hooks/use-cinema-stats";
+import { useWatchProgress } from "@/hooks/use-watch-progress";
 import { useTheme } from "next-themes";
 import { useI18n, pluralize } from "@/lib/i18n";
 import type { Movie, Genre } from "@/lib/types";
@@ -91,6 +93,7 @@ export function HomeClient({ initialData }: HomeClientProps) {
   const { favorites, toggleFavorite, isFavorite, exportFavorites } = useFavorites();
   // История просмотров (localStorage)
   const { history, addToHistory } = useWatchHistory();
+  const { continueWatching, recordProgress, markCompleted, removeProgress } = useWatchProgress();
 
   // Сравнение фильмов (до 3)
   const toggleCompare = useCallback((movie: Movie) => {
@@ -139,6 +142,7 @@ export function HomeClient({ initialData }: HomeClientProps) {
     setSimilar([]);
     setModalOpen(true);
     addToHistory(movie);
+    recordProgress(movie);
     try {
       const res = await fetch(`/api/movies/${movie.id}`);
       if (res.ok) {
@@ -148,7 +152,7 @@ export function HomeClient({ initialData }: HomeClientProps) {
     } catch {
       /* ignore */
     }
-  }, [addToHistory]);
+  }, [addToHistory, recordProgress]);
 
   // Слушатель для открытия фильма из AI-чата (глобальное событие)
   useEffect(() => {
@@ -297,6 +301,21 @@ export function HomeClient({ initialData }: HomeClientProps) {
           loading={searchLoading}
           onPlay={openMovie}
         />
+
+        {/* Продолжить просмотр (прогресс-бар) */}
+        {!loadingData && continueWatching.length > 0 && (
+          <AnimatedSection>
+            <ContinueWatching
+              entries={continueWatching}
+              onPlay={(entry) => {
+                const movie = allMovies.find((m) => m.id === entry.movieId);
+                if (movie) openMovie(movie);
+              }}
+              onRemove={removeProgress}
+              onComplete={markCompleted}
+            />
+          </AnimatedSection>
+        )}
 
         {/* История просмотров (только если есть) */}
         {!loadingData && history.length > 0 && (
