@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { Providers } from "@/components/providers";
 import { Analytics } from "@vercel/analytics/next";
+import { getFeaturedMovies } from "@/lib/movies";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,15 +18,16 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "КиноВспышка — онлайн-кинотеатр: 600 фильмов в HD",
+    default: "КиноВспышка — онлайн-кинотеатр: 1258 фильмов в HD",
     template: "%s · КиноВспышка",
   },
   description:
-    "Онлайн-кинотеатр КиноВспышка — 600 реальных фильмов с данными Кинопоиска. Смотрите онлайн в HD, ищите по названию или ID Кинопоиска, фильтруйте по жанрам. Приятного просмотра!",
+    "Онлайн-кинотеатр КиноВспышка — 1258 реальных фильмов с данными Кинопоиска. Смотрите онлайн в HD, ищите по названию или ID Кинопоиска, фильтруйте по жанрам. AI-ассистент, отзывы, рейтинги.",
   keywords: [
     "онлайн кинотеатр",
     "смотреть фильмы онлайн",
     "сериалы онлайн",
+    "аниме онлайн",
     "Кинопоиск",
     "HD фильмы",
     "трейлеры",
@@ -53,9 +55,9 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
   },
   openGraph: {
-    title: "КиноВспышка — онлайн-кинотеатр: 600 фильмов в HD",
+    title: "КиноВспышка — онлайн-кинотеатр: 1258 фильмов в HD",
     description:
-      "600 реальных фильмов с данными Кинопоиска. Смотрите онлайн в HD, ищите по названию или ID Кинопоиска.",
+      "1258 реальных фильмов с данными Кинопоиска. Смотрите онлайн в HD, AI-ассистент, отзывы, рейтинги.",
     siteName: "КиноВспышка",
     locale: "ru_RU",
     type: "website",
@@ -64,7 +66,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "КиноВспышка — онлайн-кинотеатр",
-    description: "600 фильмов в HD. Смотрите онлайн, ищите по ID Кинопоиска.",
+    description: "1258 фильмов в HD. Смотрите онлайн, ищите по ID Кинопоиска.",
   },
   robots: {
     index: true,
@@ -74,36 +76,86 @@ export const metadata: Metadata = {
   manifest: "/manifest.webmanifest",
 };
 
-// JSON-LD structured data для Google Rich Results
-const jsonLd = {
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  name: "КиноВспышка",
-  url: "https://kino.kataevweb.ru",
-  description: "Онлайн-кинотеатр с 600 реальными фильмами в HD",
-  inLanguage: "ru-RU",
-  potentialAction: {
-    "@type": "SearchAction",
-    target: {
-      "@type": "EntryPoint",
-      urlTemplate: "https://kino.kataevweb.ru/?q={search_term_string}",
+// JSON-LD: WebSite schema + Movie schemas для топ-фильмов
+function buildJsonLd() {
+  const featured = getFeaturedMovies();
+
+  const websiteSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "КиноВспышка",
+    url: "https://kino.kataevweb.ru",
+    description: "Онлайн-кинотеатр с 1258 реальными фильмами в HD",
+    inLanguage: "ru-RU",
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: "https://kino.kataevweb.ru/?q={search_term_string}",
+      },
+      "query-input": "required name=search_term_string",
     },
-    "query-input": "required name=search_term_string",
-  },
-};
+  };
+
+  const movieSchemas = featured.map((movie) => ({
+    "@context": "https://schema.org",
+    "@type": "Movie",
+    name: movie.title,
+    alternateName: movie.originalTitle,
+    datePublished: String(movie.year),
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: movie.rating,
+      bestRating: 10,
+      ratingCount: movie.views > 1000 ? Math.floor(movie.views / 1000) : 1,
+    },
+    director: {
+      "@type": "Person",
+      name: movie.director,
+    },
+    actor: movie.cast.slice(0, 4).map((name) => ({
+      "@type": "Person",
+      name,
+    })),
+    genre: movie.genres.join(", "),
+    duration: `PT${movie.duration}M`,
+    contentRating: movie.ageRating,
+    description: movie.description.slice(0, 300),
+    image: movie.posterUrl.startsWith("/")
+      ? `https://kino.kataevweb.ru${movie.posterUrl}`
+      : movie.posterUrl,
+    url: `https://kino.kataevweb.ru/?film=${movie.id}`,
+  }));
+
+  const orgSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "КиноВспышка",
+    url: "https://kino.kataevweb.ru",
+    logo: "https://kino.kataevweb.ru/icon-192.png",
+    description: "Онлайн-кинотеатр с 1258 фильмами в HD",
+  };
+
+  return [websiteSchema, ...movieSchemas, orgSchema];
+}
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const schemas = buildJsonLd();
+
   return (
     <html lang="ru" suppressHydrationWarning>
       <head>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
+        {schemas.map((schema, i) => (
+          <script
+            key={i}
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+          />
+        ))}
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}

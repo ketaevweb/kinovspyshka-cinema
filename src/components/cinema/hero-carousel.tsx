@@ -18,10 +18,12 @@ interface HeroCarouselProps {
 export function HeroCarousel({ movies, onPlay, onInfo }: HeroCarouselProps) {
   const [emblaRef, embla] = useEmblaCarousel({ loop: true, duration: 30 });
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [progress, setProgress] = useState(0);
 
   const onSelect = useCallback(() => {
     if (!embla) return;
     setSelectedIndex(embla.selectedScrollSnap());
+    setProgress(0);
   }, [embla]);
 
   useEffect(() => {
@@ -32,11 +34,26 @@ export function HeroCarousel({ movies, onPlay, onInfo }: HeroCarouselProps) {
     };
   }, [embla, onSelect]);
 
-  // Автопрокрутка
+  // Автопрокрутка с прогресс-баром
   useEffect(() => {
     if (!embla || movies.length <= 1) return;
-    const id = setInterval(() => embla.scrollNext(), 7000);
-    return () => clearInterval(id);
+    const duration = 7000;
+    const interval = 50;
+    let elapsed = 0;
+
+    const timer = setInterval(() => {
+      elapsed += interval;
+      const pct = Math.min((elapsed / duration) * 100, 100);
+      setProgress(pct);
+
+      if (elapsed >= duration) {
+        elapsed = 0;
+        setProgress(0);
+        embla.scrollNext();
+      }
+    }, interval);
+
+    return () => clearInterval(timer);
   }, [embla, movies.length]);
 
   if (movies.length === 0) return null;
@@ -144,18 +161,26 @@ export function HeroCarousel({ movies, onPlay, onInfo }: HeroCarouselProps) {
             <ChevronRight className="h-6 w-6" />
           </button>
 
-          {/* Точки */}
+          {/* Прогресс-индикаторы */}
           <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 gap-2">
             {movies.map((_, i) => (
               <button
                 key={i}
                 onClick={() => embla?.scrollTo(i)}
                 aria-label={`Слайд ${i + 1}`}
-                className={cn(
-                  "h-1.5 rounded-full transition-all",
-                  i === selectedIndex ? "w-7 bg-cinema" : "w-2 bg-white/40 hover:bg-white/70"
+                className="h-1.5 overflow-hidden rounded-full bg-white/20 transition-all"
+                style={{ width: i === selectedIndex ? "w-7" : "w-2" }}
+              >
+                {i === selectedIndex && (
+                  <div
+                    className="h-full rounded-full bg-cinema transition-all"
+                    style={{ width: `${progress}%` }}
+                  />
                 )}
-              />
+                {i !== selectedIndex && (
+                  <div className="h-full w-full rounded-full bg-white/40" />
+                )}
+              </button>
             ))}
           </div>
         </>

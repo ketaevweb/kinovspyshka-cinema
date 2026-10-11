@@ -27697,8 +27697,17 @@ function movies(): Movie[] {
 export function getAllMovies(): Movie[] { return movies(); }
 
 export function getFeaturedMovies(): Movie[] {
-  const featured = movies().filter((m) => m.featured);
-  return featured.length >= 6 ? featured : movies().filter((m) => m.backdropUrl).slice(0, 6);
+  // Микс: 3 классики (топ рейтинг) + 3 новинки (последние годы) для разнообразия hero
+  const classics = movies()
+    .filter((m) => m.backdropUrl || m.featured)
+    .sort((a, b) => b.rating - a.rating)
+    .slice(0, 3);
+  const recent = movies()
+    .filter((m) => m.year >= 2018 && m.rating >= 7.5 && !classics.find((c) => c.id === m.id))
+    .sort((a, b) => b.year - a.year || b.rating - a.rating)
+    .slice(0, 3);
+  const mixed = [...classics, ...recent];
+  return mixed.length >= 4 ? mixed : movies().filter((m) => m.backdropUrl).slice(0, 6);
 }
 
 export function getTrendingMovies(): Movie[] {
