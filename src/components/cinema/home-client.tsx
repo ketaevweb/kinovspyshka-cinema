@@ -127,16 +127,15 @@ export function HomeClient({ initialData }: HomeClientProps) {
   // Статистика просмотра
   const stats = useCinemaStats(allMovies);
 
-  // Загрузка данных через API (если initialData null — клиентский рендеринг)
+  // Загрузка данных через API (лёгкие запросы — без allMovies)
   useEffect(() => {
-    if (initialData) return; // SSR данные уже есть
+    if (initialData) return;
     let active = true;
     (async () => {
       try {
-        const [f, t, a, g, c, col] = await Promise.all([
+        const [f, t, g, c, col] = await Promise.all([
           fetch("/api/movies/featured").then((r) => r.json()),
           fetch("/api/movies/trending").then((r) => r.json()),
-          fetch("/api/movies").then((r) => r.json()),
           fetch("/api/movies/genres").then((r) => r.json()),
           fetch("/api/movies/countries").then((r) => r.json()),
           fetch("/api/movies/collections").then((r) => r.json()),
@@ -144,7 +143,6 @@ export function HomeClient({ initialData }: HomeClientProps) {
         if (!active) return;
         setFeatured(f.movies ?? []);
         setTrending(t.movies ?? []);
-        setAllMovies(a.movies ?? []);
         setGenres(g.genres ?? []);
         setCountries(c.countries ?? []);
         setCollections(col.collections ?? []);
@@ -160,6 +158,50 @@ export function HomeClient({ initialData }: HomeClientProps) {
     })();
     return () => { active = false; };
   }, [initialData]);
+
+  // Каталог: постраничная загрузка (не все 5007 сразу)
+  const [catalogPage, setCatalogPage] = useState(1);
+  const [catalogTotal, setCatalogTotal] = useState(0);
+  const [catalogLoading, setCatalogLoading] = useState(false);
+
+  const fetchCatalogPage = useCallback(async (page: number, reset: boolean) => {
+    setCatalogLoading(true);
+    try {
+      const res = await fetch(`/api/movies?page=${page}&limit=24&sort=${filters.sort}&genre=${encodeURIComponent(filters.genre)}`);
+      const data = await res.json();
+      if (reset) {
+        setAllMovies(data.movies ?? []);
+      } else {
+        setAllMovies((prev) => [...prev, ...(data.movies ?? [])]);
+      }
+      setCatalogTotal(data.total ?? 0);
+    } catch {
+      /* ignore */
+    }
+    setCatalogLoading(false);
+  }, [filters.sort, filters.genre]);
+
+  // Загрузка первой страницы каталога после initial загрузки
+  useEffect(() => {
+    if (initialData || loadingData) return;
+    fetchCatalogPage(1, true);
+    setCatalogPage(1);
+  }, [initialData, loadingData, fetchCatalogPage]);
+
+  // Перезагрузка при смене фильтра/сортировки
+  useEffect(() => {
+    if (initialData || loadingData) return;
+    fetchCatalogPage(1, true);
+    setCatalogPage(1);
+    setCatalogVisible(24);
+  }, [filters.genre, filters.sort, initialData, loadingData, fetchCatalogPage]);
+
+  // Загрузка следующей страницы
+  const loadMore = useCallback(() => {
+    const nextPage = catalogPage + 1;
+    setCatalogPage(nextPage);
+    fetchCatalogPage(nextPage, false);
+  }, [catalogPage, fetchCatalogPage]);
 
   // NewReleases вычисляем из allMovies (сортировка по году)
   useEffect(() => {
@@ -247,27 +289,8 @@ export function HomeClient({ initialData }: HomeClientProps) {
   ]);
 
   // Фильтрация каталога (client-side через useMemo для мгновенного отклика)
-  const filteredMovies = useMemo(() => {
-    const result = allMovies.filter((m) => {
-      if (filters.genre !== "Все" && !m.genres.includes(filters.genre)) return false;
-      if (filters.country !== "Все" && !m.countries.includes(filters.country)) return false;
-      if (m.year < filters.yearFrom) return false;
-      if (m.year > filters.yearTo) return false;
-      if (m.rating < filters.ratingFrom) return false;
-      if (m.rating > filters.ratingTo) return false;
-      return true;
-    });
-    const sorted = [...result];
-    switch (filters.sort) {
-      case "rating-desc": sorted.sort((a, b) => b.rating - a.rating); break;
-      case "rating-asc": sorted.sort((a, b) => a.rating - b.rating); break;
-      case "year-desc": sorted.sort((a, b) => b.year - a.year); break;
-      case "year-asc": sorted.sort((a, b) => a.year - b.year); break;
-      case "views-desc": sorted.sort((a, b) => b.views - a.views); break;
-      case "title-asc": sorted.sort((a, b) => a.title.localeCompare(b.title, "ru")); break;
-    }
-    return sorted;
-  }, [allMovies, filters]);
+  // filteredMovies = allMovies (фильтрация на сервере через API)
+  const filteredMovies = allMovies;
 
   const resetFilters = useCallback(() => {
     setFilters({
@@ -288,10 +311,10 @@ export function HomeClient({ initialData }: HomeClientProps) {
   }, []);
 
   // Бесконечная прокрутка каталога
-  const hasMore = filteredMovies.length > catalogVisible;
+  const hasMore = !loadingData && catalogTotal > allMovies.length;
   const { sentinelRef, isLoading: isLoadingMore } = useInfiniteScroll(
-    () => setCatalogVisible((v) => v + 24),
-    { resetKey: filters.genre + filters.country + filters.sort, hasMore }
+    () => loadMore(),
+    { resetKey: filters.genre + filters.sort, hasMore }
   );
 
   return (
@@ -465,7 +488,7 @@ export function HomeClient({ initialData }: HomeClientProps) {
               <div>
                 <h2 className="text-xl font-bold tracking-tight sm:text-2xl">{t("catalog.title")}</h2>
                 <p className="mt-0.5 text-sm text-muted-foreground">
-                  <span className="font-semibold text-foreground">{filteredMovies.length}</span> {pluralize(filteredMovies.length, t("section.favoritesSub"), lang)} {t("catalog.moviesInCollection")}
+                  <span className="font-semibold text-foreground">{catalogTotal || filteredMovies.length}</span> {pluralize(catalogTotal || filteredMovies.length, t("section.favoritesSub"), lang)} {t("catalog.moviesInCollection")}
                 </p>
               </div>
               {favorites.size > 0 && (
@@ -481,11 +504,11 @@ export function HomeClient({ initialData }: HomeClientProps) {
               genres={genres}
               countries={countries}
               yearRange={yearRange}
-              resultCount={filteredMovies.length}
+              resultCount={catalogTotal || filteredMovies.length}
             />
           </div>
           <div className="mt-6">
-            {loadingData ? (
+            {loadingData || catalogLoading ? (
               <GridSkeleton />
             ) : filteredMovies.length === 0 ? (
               <EmptyState
@@ -520,7 +543,7 @@ export function HomeClient({ initialData }: HomeClientProps) {
                 </div>
               )}
               <p className="text-xs text-muted-foreground">
-                {t("load.shown")} {Math.min(catalogVisible, filteredMovies.length)} {t("load.of")} {filteredMovies.length}
+                {t("load.shown")} {allMovies.length} {t("load.of")} {catalogTotal || filteredMovies.length}
               </p>
               {/* Sentinel — наблюдатель IntersectionObserver срабатывает при попадании в viewport */}
               <div ref={sentinelRef} className="h-4 w-full" aria-hidden />
