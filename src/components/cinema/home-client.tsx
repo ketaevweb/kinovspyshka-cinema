@@ -38,7 +38,6 @@ const FilterPanel = dynamic(() => import("@/components/cinema/filter-panel").the
 type SearchMode = "id" | "name" | "torrent";
 
 interface HomeClientProps {
-  /** SSR-данные — приходят сразу в первом HTML, без отдельного fetch */
   initialData: {
     featured: Movie[];
     trending: Movie[];
@@ -47,27 +46,27 @@ interface HomeClientProps {
     countries: Genre[];
     collections: { id: string; title: string; subtitle: string; movies: Movie[] }[];
     yearRange: { min: number; max: number };
-  };
+  } | null;
 }
 
 export function HomeClient({ initialData }: HomeClientProps) {
   const { t, lang } = useI18n();
-  const [featured, setFeatured] = useState<Movie[]>(initialData.featured);
-  const [trending, setTrending] = useState<Movie[]>(initialData.trending);
+  const [featured, setFeatured] = useState<Movie[]>(initialData?.featured ?? []);
+  const [trending, setTrending] = useState<Movie[]>(initialData?.trending ?? []);
   const [newReleases, setNewReleases] = useState<Movie[]>([]);
-  const [allMovies, setAllMovies] = useState<Movie[]>(initialData.allMovies);
-  const [genres, setGenres] = useState<Genre[]>(initialData.genres);
-  const [countries, setCountries] = useState<Genre[]>(initialData.countries);
-  const [collections, setCollections] = useState<{ id: string; title: string; subtitle: string; movies: Movie[] }[]>(initialData.collections);
-  const [yearRange, setYearRange] = useState(initialData.yearRange);
-  const [loadingData, setLoadingData] = useState(false); // SSR-данные уже есть
+  const [allMovies, setAllMovies] = useState<Movie[]>(initialData?.allMovies ?? []);
+  const [genres, setGenres] = useState<Genre[]>(initialData?.genres ?? []);
+  const [countries, setCountries] = useState<Genre[]>(initialData?.countries ?? []);
+  const [collections, setCollections] = useState<{ id: string; title: string; subtitle: string; movies: Movie[] }[]>(initialData?.collections ?? []);
+  const [yearRange, setYearRange] = useState(initialData?.yearRange ?? { min: 1920, max: 2026 });
+  const [loadingData, setLoadingData] = useState(!initialData);
 
-  // Фильтры каталога (дефолты из SSR yearRange)
+  // Фильтры каталога
   const [filters, setFilters] = useState<FilterState>({
     genre: "Все",
     country: "Все",
-    yearFrom: initialData.yearRange.min,
-    yearTo: initialData.yearRange.max,
+    yearFrom: initialData?.yearRange.min ?? 1920,
+    yearTo: initialData?.yearRange.max ?? 2026,
     ratingFrom: 0,
     ratingTo: 10,
     sort: "rating-desc",
@@ -128,7 +127,41 @@ export function HomeClient({ initialData }: HomeClientProps) {
   // Статистика просмотра
   const stats = useCinemaStats(allMovies);
 
-  // NewReleases вычисляем из SSR allMovies (сортировка по году)
+  // Загрузка данных через API (если initialData null — клиентский рендеринг)
+  useEffect(() => {
+    if (initialData) return; // SSR данные уже есть
+    let active = true;
+    (async () => {
+      try {
+        const [f, t, a, g, c, col] = await Promise.all([
+          fetch("/api/movies/featured").then((r) => r.json()),
+          fetch("/api/movies/trending").then((r) => r.json()),
+          fetch("/api/movies").then((r) => r.json()),
+          fetch("/api/movies/genres").then((r) => r.json()),
+          fetch("/api/movies/countries").then((r) => r.json()),
+          fetch("/api/movies/collections").then((r) => r.json()),
+        ]);
+        if (!active) return;
+        setFeatured(f.movies ?? []);
+        setTrending(t.movies ?? []);
+        setAllMovies(a.movies ?? []);
+        setGenres(g.genres ?? []);
+        setCountries(c.countries ?? []);
+        setCollections(col.collections ?? []);
+        if (c.yearRange) {
+          setYearRange(c.yearRange);
+          setFilters((prev) => ({ ...prev, yearFrom: c.yearRange.min, yearTo: c.yearRange.max }));
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        if (active) setLoadingData(false);
+      }
+    })();
+    return () => { active = false; };
+  }, [initialData]);
+
+  // NewReleases вычисляем из allMovies (сортировка по году)
   useEffect(() => {
     if (allMovies.length > 0) {
       const sortedNew = [...allMovies].sort((x, y) => y.year - x.year).slice(0, 12);
