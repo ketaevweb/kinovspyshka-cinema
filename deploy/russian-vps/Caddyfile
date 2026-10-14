@@ -1,0 +1,66 @@
+# ============================================================================
+# КиноВспышка — Reverse Proxy на российском VPS (обход блокировки DPI)
+# ----------------------------------------------------------------------------
+# Caddy автоматически:
+#   1. Получает Let's Encrypt SSL-сертификат для kino.kataevweb.ru
+#   2. Проксирует трафик на Vercel, сохраняя Host-заголовок
+#   3. Сжимает ответы (zstd/gzip)
+#
+# Как это обходит блокировку:
+#   Пользователь (T2/Ростелеком) → российский VPS IP (НЕ заблокирован)
+#   Российский VPS → Vercel IP (через транзит хостинга, БЕЗ DPI Ростелекома)
+# ============================================================================
+
+{
+	admin off
+	# Лог в stdout (видно через docker logs)
+	log {
+		output stdout
+		format console
+		level INFO
+	}
+}
+
+kino.kataevweb.ru {
+	# Сжатие ответов — экономит трафик на мобильной сети T2
+	encode zstd gzip
+
+	# Базовые security-заголовки
+	header {
+		Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		# Скрываем факт проксирования — Vercel сам добавит свои заголовки
+		-Server
+	}
+
+	# Логируем каждый запрос (полезно для отладки блокировок)
+	log {
+		output stdout
+		format console
+	}
+
+	# Статика Next.js — Vercel сам отдаёт Cache-Control: immutable,
+	# мы просто проксируем как есть.
+	reverse_proxy https://cname.vercel-dns.com {
+		# Сохраняем Host — Vercel маршрутизирует на конфиг домена kino.kataevweb.ru
+		# (NextAuth, canonical URL, og:image — всё работает корректно)
+		header_up Host kino.kataevweb.ru
+
+		# Для TLS к Vercel: SNI = kino.kataevweb.ru (Vercel подставит верный сертификат)
+		transport http {
+			tls
+			tls_server_name kino.kataevweb.ru
+			# Длинные таймауты — Vercel иногда медленный из России
+			read_timeout 60s
+			write_timeout 60s
+			dial_timeout 15s
+		}
+
+		# Передаём реальный IP пользователя (для аналитики Vercel)
+		header_up X-Real-IP {remote_host}
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+	}
+}
