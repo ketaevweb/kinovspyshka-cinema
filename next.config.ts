@@ -12,7 +12,12 @@ const nextConfig: NextConfig = {
     // Размеры для responsive srcset
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    // Локальные файлы — без remotePatterns
+    // Generated-записи (~5000) используют внешний CDN Yandex для постеров.
+    // Хотлинк разрешён (проверено), Yandex CDN доступен в России.
+    // Verified-фильмы (5007) — локальные постеры в /public/posters/.
+    remotePatterns: [
+      { protocol: "https", hostname: "st.kp.yandex.net", pathname: "/images/**" },
+    ],
   },
   // ── Cache-заголовки для ускорения на мобильной сети T2/Ростелеком ──
   // Статика /_next/static/ уже immutable (Next.js по умолчанию).

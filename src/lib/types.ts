@@ -1,5 +1,8 @@
 // Типы данных для онлайн-кинотеатра
 
+/** Тип контента для каталога 10000+ позиций */
+export type MovieType = "film" | "cartoon" | "anime" | "series";
+
 export interface Movie {
   /** Уникальный slug-идентификатор */
   id: string;
@@ -11,7 +14,7 @@ export interface Movie {
   year: number;
   /** Рейтинг 0-10 (Кинопоиск-style) */
   rating: number;
-  /** Длительность в минутах */
+  /** Длительность в минутах (для сериалов — средняя длительность серии) */
   duration: number;
   /** Жанры */
   genres: string[];
@@ -33,14 +36,20 @@ export interface Movie {
   videoUrl: string;
   /** Ссылка на трейлер (mp4) */
   trailerUrl: string;
-  /** ID Кинопоиска (для фичи поиска по ID) */
+  /** ID Кинопоиска (для фичи поиска по ID и плеера troutcdn.site/{id}) */
   kinopoiskId: number;
-  /** Показывать в hero-карусели */
+  /** Тип контента: фильм / мультфильм / аниме / сериал */
+  type: MovieType;
+  /** Число сезонов (для сериалов, иначе 0) */
+  seasons?: number;
+  /** Показывать в hero-карусели (только verified-фильмы) */
   featured: boolean;
-  /** Популярное / в тренде */
+  /** Популярное / в тренде (только verified-фильмы) */
   trending: boolean;
   /** Количество просмотров */
   views: number;
+  /** true = реальные полные метаданные; false = реальный ID+постер, метаданные сгенерированы */
+  verified: boolean;
 }
 
 export interface Genre {

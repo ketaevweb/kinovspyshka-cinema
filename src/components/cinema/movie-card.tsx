@@ -46,6 +46,20 @@ export function MovieCard({ movie, onPlay, onInfo, onCompare, inCompare, variant
           {movie.ageRating}
         </div>
 
+        {/* Бейдж типа контента (для generated-записей — индикатор категории) */}
+        {movie.type !== "film" && (
+          <div className={cn(
+            "absolute left-2 bottom-2 z-10 rounded px-1.5 py-0.5 text-[10px] font-semibold backdrop-blur",
+            movie.type === "cartoon" && "bg-orange-600/80 text-white",
+            movie.type === "anime" && "bg-pink-600/80 text-white",
+            movie.type === "series" && "bg-purple-600/80 text-white"
+          )}>
+            {movie.type === "cartoon" && t("type.cartoon")}
+            {movie.type === "anime" && t("type.anime")}
+            {movie.type === "series" && t("type.series")}
+          </div>
+        )}
+
         {/* Бейдж Топ-250 Кинопоиска */}
         {(() => {
           const rank = getTop250Rank(movie.kinopoiskId);

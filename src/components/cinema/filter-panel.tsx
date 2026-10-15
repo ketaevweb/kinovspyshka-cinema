@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { SlidersHorizontal, X, Star, Calendar, Globe2, ArrowUpDown, RotateCcw } from "lucide-react";
+import { SlidersHorizontal, X, Star, Calendar, Globe2, ArrowUpDown, RotateCcw, Film, Clapperboard, Tv, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
-import type { Genre } from "@/lib/types";
+import type { Genre, MovieType } from "@/lib/types";
 import type { SortOption } from "@/lib/movies";
 
 export interface FilterState {
@@ -23,8 +23,18 @@ export interface FilterState {
   yearTo: number;
   ratingFrom: number;
   ratingTo: number;
+  type: MovieType | "all";
   sort: SortOption;
 }
+
+/** Метаданные типов контента для UI */
+export const TYPE_FILTERS: { value: MovieType | "all"; labelKey: string; icon: typeof Film }[] = [
+  { value: "all", labelKey: "type.all", icon: SlidersHorizontal },
+  { value: "film", labelKey: "type.film", icon: Film },
+  { value: "cartoon", labelKey: "type.cartoon", icon: Clapperboard },
+  { value: "anime", labelKey: "type.anime", icon: Sparkles },
+  { value: "series", labelKey: "type.series", icon: Tv },
+];
 
 interface FilterPanelProps {
   filters: FilterState;
@@ -64,12 +74,36 @@ export function FilterPanel({
   const activeCount =
     (filters.genre !== "Все" ? 1 : 0) +
     (filters.country !== "Все" ? 1 : 0) +
+    (filters.type !== "all" ? 1 : 0) +
     (filters.yearFrom > yearRange.min || filters.yearTo < yearRange.max ? 1 : 0) +
     (filters.ratingFrom > 0 || filters.ratingTo < 10 ? 1 : 0) +
     (filters.sort !== "rating-desc" ? 1 : 0);
 
   return (
-    <div className="relative">
+    <div className="relative space-y-3">
+      {/* Чипы типа контента — всегда видимы (основная навигация) */}
+      <div className="flex flex-wrap items-center gap-1.5">
+        {TYPE_FILTERS.map((tf) => {
+          const Icon = tf.icon;
+          const isActive = filters.type === tf.value;
+          return (
+            <button
+              key={tf.value}
+              onClick={() => update({ type: tf.value })}
+              className={cn(
+                "flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition",
+                isActive
+                  ? "border-cinema bg-cinema text-white"
+                  : "border-white/10 bg-card text-muted-foreground hover:border-white/30 hover:text-foreground"
+              )}
+            >
+              <Icon className="h-3.5 w-3.5" />
+              {t(tf.labelKey)}
+            </button>
+          );
+        })}
+      </div>
+
       <div className="flex flex-wrap items-center gap-2">
         <Button
           variant="outline"

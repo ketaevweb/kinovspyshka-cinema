@@ -69,6 +69,7 @@ export function HomeClient({ initialData }: HomeClientProps) {
     yearTo: initialData?.yearRange.max ?? 2026,
     ratingFrom: 0,
     ratingTo: 10,
+    type: "all",
     sort: "rating-desc",
   });
   const [catalogVisible, setCatalogVisible] = useState(24); // пагинация каталога
@@ -167,7 +168,7 @@ export function HomeClient({ initialData }: HomeClientProps) {
   const fetchCatalogPage = useCallback(async (page: number, reset: boolean) => {
     setCatalogLoading(true);
     try {
-      const res = await fetch(`/api/movies?page=${page}&limit=24&sort=${filters.sort}&genre=${encodeURIComponent(filters.genre)}`);
+      const res = await fetch(`/api/movies?page=${page}&limit=24&sort=${filters.sort}&genre=${encodeURIComponent(filters.genre)}&type=${filters.type}`);
       const data = await res.json();
       if (reset) {
         setAllMovies(data.movies ?? []);
@@ -179,7 +180,7 @@ export function HomeClient({ initialData }: HomeClientProps) {
       /* ignore */
     }
     setCatalogLoading(false);
-  }, [filters.sort, filters.genre]);
+  }, [filters.sort, filters.genre, filters.type]);
 
   // Загрузка первой страницы каталога после initial загрузки
   useEffect(() => {
@@ -300,6 +301,7 @@ export function HomeClient({ initialData }: HomeClientProps) {
       yearTo: yearRange.max,
       ratingFrom: 0,
       ratingTo: 10,
+      type: "all",
       sort: "rating-desc",
     });
     setCatalogVisible(24);
@@ -314,7 +316,7 @@ export function HomeClient({ initialData }: HomeClientProps) {
   const hasMore = !loadingData && catalogTotal > allMovies.length;
   const { sentinelRef, isLoading: isLoadingMore } = useInfiniteScroll(
     () => loadMore(),
-    { resetKey: filters.genre + filters.sort, hasMore }
+    { resetKey: filters.genre + filters.sort + filters.type, hasMore }
   );
 
   return (
